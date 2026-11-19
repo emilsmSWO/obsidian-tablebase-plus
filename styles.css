@@ -1240,6 +1240,10 @@ input[type="text"].ms-filter-value-input:focus {
   color: var(--link-external-color, var(--text-accent));
 }
 
+.ms-cell-link.internal-link.is-unresolved {
+  opacity: var(--link-unresolved-opacity, 0.7);
+}
+
 .ms-inline-cell-input,
 .ms-db-grid-table .ms-db-td input.ms-inline-cell-input,
 .theme-dark .ms-db-grid-table .ms-db-td input.ms-inline-cell-input,

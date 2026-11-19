@@ -348,7 +348,7 @@ describe("KanbanView", () => {
     expect(linkEl?.getAttribute("href")).toBe("https://github.com");
 
     linkEl?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    expect(windowOpenSpy).toHaveBeenCalledWith("https://github.com", "_blank");
+    expect(windowOpenSpy).toHaveBeenCalledWith("https://github.com", "_blank", "noopener,noreferrer");
 
     windowOpenSpy.mockRestore();
   });

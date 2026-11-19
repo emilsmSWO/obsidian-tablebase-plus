@@ -14,7 +14,8 @@ import {
 } from "../types";
 import { appendIcon, appendIconLabel } from "../utils/dom";
 import { attachStrictNumericInputHandlers, sanitizeNumericCellValue } from "../utils/input";
-import { renderTextWithLinks, stripCodeSpans } from "../utils/link-renderer";
+import { createLinkCallbacks, LinkHoverParent } from "../utils/link-actions";
+import { LinkRenderCallbacks, renderTextWithLinks, stripCodeSpans } from "../utils/link-renderer";
 import {
   ICON_CHECK_SQUARE,
   ICON_DUPLICATE,
@@ -57,11 +58,20 @@ export class KanbanView {
   private options: KanbanViewOptions;
   private containerEl: HTMLElement;
   private groupByColIndex: number;
+  private linkHoverParent: LinkHoverParent = { hoverPopover: null };
 
   constructor(options: KanbanViewOptions) {
     this.options = options;
     this.containerEl = createDiv({ cls: "ms-kanban-container" });
     this.groupByColIndex = this.resolveInitialGroupByColumn();
+  }
+
+  private createLinkCallbacks(): LinkRenderCallbacks {
+    return createLinkCallbacks(
+      this.options.app,
+      this.options.sourcePath,
+      this.linkHoverParent
+    );
   }
 
   private resolveInitialGroupByColumn(): number {
@@ -347,20 +357,7 @@ export class KanbanView {
     const titleEl = card.createDiv({
       cls: "ms-kanban-card-title",
     });
-    renderTextWithLinks(titleEl, row.cells[0] || "Untitled", {
-      onExternalClick: (url, e) => {
-        e.stopPropagation();
-        if (typeof window !== "undefined" && url) {
-          window.open(url, "_blank");
-        }
-      },
-      onInternalClick: (path, e) => {
-        e.stopPropagation();
-        if (path && this.options.app?.workspace) {
-          void this.options.app.workspace.openLinkText?.(path, this.options.sourcePath || "", false);
-        }
-      },
-    });
+    renderTextWithLinks(titleEl, row.cells[0] || "Untitled", this.createLinkCallbacks());
 
     titleEl.addEventListener("dblclick", (e) => {
       e.stopPropagation();
@@ -601,24 +598,7 @@ export class KanbanView {
       return;
     }
 
-    renderTextWithLinks(badge, cellValue, {
-      onExternalClick: (url, e) => {
-        e.stopPropagation();
-        if (typeof window !== "undefined" && url) {
-          window.open(url, "_blank");
-        }
-      },
-      onInternalClick: (path, e) => {
-        e.stopPropagation();
-        if (path && this.options.app?.workspace) {
-          void this.options.app.workspace.openLinkText?.(
-            path,
-            this.options.sourcePath || "",
-            false
-          );
-        }
-      },
-    });
+    renderTextWithLinks(badge, cellValue, this.createLinkCallbacks());
   }
 
   private renderTextProperty(

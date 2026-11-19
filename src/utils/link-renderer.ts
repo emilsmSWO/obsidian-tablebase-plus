@@ -7,6 +7,9 @@ export interface LinkToken {
 export interface LinkRenderCallbacks {
   onExternalClick?: (url: string, e: MouseEvent) => void;
   onInternalClick?: (path: string, e: MouseEvent) => void;
+  onInternalHover?: (path: string, e: MouseEvent, linkEl: HTMLElement) => void;
+  /** Whether an internal link points at an existing note; unresolved ones are marked. */
+  isInternalResolved?: (path: string) => boolean;
 }
 
 function trimTrailingUrlPunctuation(url: string): { url: string; trailing: string } {
@@ -109,8 +112,24 @@ export function stripCodeSpans(input: string): string {
   return out + input.slice(pos);
 }
 
+// A Markdown link takes a bare destination or one in angle brackets (which may
+// hold spaces), plus an optional title. A wikilink may be "![[embed]]", and in a
+// table its alias separator is written "\|".
 const LINK_PATTERN =
-  /(\[(?<mdLabel>[^\]\r\n]+)\]\((?<mdUrl>https?:\/\/(?:[^\s()\r\n]|\([^\s()\r\n]*\))+)\))|(\[\[(?<wikiTarget>[^\]|\r\n]+)(?:\|(?<wikiAlias>[^\]\r\n]+))?\]\])|(?<rawUrl>https?:\/\/(?:[^\s<>[\]()"']|\([^\s<>[\]()"']*\))+)/g;
+  /(\[(?<mdLabel>[^\]\r\n]+)\]\((?:<(?<mdAngleDest>[^<>\r\n]+)>|(?<mdDest>(?:[^\s()<>\r\n]|\([^\s()\r\n]*\))+))(?:\s+"[^"\r\n]*")?\))|(!?\[\[(?<wikiTarget>[^\]|\r\n]+?)(?:\\?\|(?<wikiAlias>[^\]\r\n]+))?\]\])|(?<rawUrl>(?:https?|obsidian):\/\/(?:[^\s<>[\]()"']|\([^\s<>[\]()"']*\))+)/g;
+
+// Anything else ("javascript:", "file:") is left as text rather than made clickable.
+export const EXTERNAL_SCHEME = /^(?:https?|obsidian|mailto|tel):/i;
+// Two or more letters, so "C:\\dir" is not mistaken for a scheme.
+const ANY_SCHEME = /^[a-z][a-z0-9+.-]+:/i;
+
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
 
 export function parseLinkTokens(input: string): LinkToken[] {
   if (!input) return [];
@@ -143,12 +162,17 @@ export function parseLinkTokens(input: string): LinkToken[] {
 
 function appendLinkToken(tokens: LinkToken[], match: RegExpExecArray): void {
   const groups = match.groups;
-  if (groups?.mdUrl) {
-    tokens.push({
-      type: "external",
-      text: groups.mdLabel ? stripCodeSpans(groups.mdLabel) : groups.mdUrl,
-      href: groups.mdUrl,
-    });
+  const mdDest = groups?.mdAngleDest ?? groups?.mdDest;
+  if (mdDest) {
+    const label = groups?.mdLabel ? stripCodeSpans(groups.mdLabel) : mdDest;
+    if (EXTERNAL_SCHEME.test(mdDest)) {
+      tokens.push({ type: "external", text: label, href: mdDest });
+    } else if (ANY_SCHEME.test(mdDest)) {
+      appendTextToken(tokens, match[0]);
+    } else {
+      // A relative path or "#heading" points into the vault; "%20" is a space.
+      tokens.push({ type: "internal", text: label, href: safeDecode(mdDest.trim()) });
+    }
   } else if (groups?.wikiTarget) {
     tokens.push({
       type: "internal",
@@ -225,6 +249,14 @@ export function renderTextWithLinks(
       });
       if (token.href) {
         linkEl.dataset.href = token.href;
+        if (callbacks?.isInternalResolved && !callbacks.isInternalResolved(token.href)) {
+          linkEl.classList.add("is-unresolved");
+        }
+        const onHover = callbacks?.onInternalHover;
+        if (onHover) {
+          const href = token.href;
+          linkEl.addEventListener("mouseover", (e) => onHover(href, e, linkEl));
+        }
       }
 
       if (callbacks?.onInternalClick) {

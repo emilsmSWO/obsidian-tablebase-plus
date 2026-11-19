@@ -13,6 +13,7 @@ import { TableViewRegistry } from "./services/table-view-registry";
 import { VaultService } from "./services/vault-service";
 import { closeAllFloatingPopovers } from "./ui/popover";
 import { TableBaseSettingTab } from "./ui/settings-tab";
+import { HOVER_LINK_SOURCE } from "./utils/link-actions";
 
 export default class TableBasePlugin extends Plugin {
   private settingsService!: SettingsService;
@@ -24,6 +25,11 @@ export default class TableBasePlugin extends Plugin {
       saveData: (data) => this.saveData(data),
     });
     await this.settingsService.loadSettings();
+
+    this.registerHoverLinkSource(HOVER_LINK_SOURCE, {
+      display: "TableBase",
+      defaultMod: true,
+    });
 
     this.viewRegistry = new TableViewRegistry();
     this.register(() => this.viewRegistry.dispose());

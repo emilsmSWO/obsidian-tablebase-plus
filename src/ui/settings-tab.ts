@@ -26,7 +26,7 @@ export class TableBaseSettingTab extends PluginSettingTab {
     return [
       {
         name: "Auto-convert Markdown tables",
-        desc: "Automatically convert standard Markdown tables into interactive TableBase tables.",
+        desc: "Automatically convert standard Markdown tables into interactive TableBase Plus tables.",
         control: {
           type: "toggle",
           key: "autoConvertMarkdownTables",
@@ -173,7 +173,7 @@ export class TableBaseSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Auto-convert Markdown tables")
       .setDesc(
-        "Automatically convert standard Markdown tables into interactive TableBase tables."
+        "Automatically convert standard Markdown tables into interactive TableBase Plus tables."
       )
       .addToggle((toggle) =>
         toggle

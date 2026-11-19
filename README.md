@@ -1,9 +1,9 @@
-# TableBase for Obsidian
+# TableBase Plus for Obsidian
 
 > **Transform standard Markdown tables into interactive Notion-like databases and Kanban boards — with 100% plain Markdown and zero vendor lock-in.**
 
-[![Release](https://img.shields.io/github/v/release/a269ch/obsidian-tablebase?color=orange&label=Release&logo=github)](https://github.com/a269ch/obsidian-tablebase/releases)
-[![Tests](https://img.shields.io/badge/Tests-338%20Passed-brightgreen.svg?logo=vitest&logoColor=white)](https://github.com/a269ch/obsidian-tablebase)
+[![Release](https://img.shields.io/github/v/release/emilsmSWO/obsidian-tablebase-plus?color=orange&label=Release&logo=github)](https://github.com/emilsmSWO/obsidian-tablebase-plus/releases)
+[![Tests](https://img.shields.io/badge/Tests-338%20Passed-brightgreen.svg?logo=vitest&logoColor=white)](https://github.com/emilsmSWO/obsidian-tablebase-plus)
 [![Obsidian](https://img.shields.io/badge/Obsidian-v1.5.0+-7C3AED.svg?logo=obsidian&logoColor=white)](https://obsidian.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -11,22 +11,17 @@
 
 ## 📦 Installation
 
-### From Obsidian Community Plugins *(Recommended)*
-1. In Obsidian, open **Settings** → **Community plugins**.
-2. Ensure **Restricted mode** is disabled.
-3. Click **Browse**, search for **TableBase**, and click **Install** → **Enable**.
-
 ### Manual Installation
-1. Download `main.js`, `manifest.json`, and `styles.css` from the [Latest Release](https://github.com/a269ch/obsidian-tablebase/releases).
-2. In your vault folder, navigate to `.obsidian/plugins/` and create a folder named `tablebase`.
-3. Copy `main.js`, `manifest.json`, and `styles.css` into `.obsidian/plugins/tablebase/`.
-4. In Obsidian, go to **Settings** → **Community plugins**, click **Reload plugins**, and enable **TableBase**.
+1. Download `main.js`, `manifest.json`, and `styles.css` from the [Latest Release](https://github.com/emilsmSWO/obsidian-tablebase-plus/releases).
+2. In your vault folder, navigate to `.obsidian/plugins/` and create a folder named `obsidian-tablebase-plus`.
+3. Copy `main.js`, `manifest.json`, and `styles.css` into `.obsidian/plugins/obsidian-tablebase-plus/`.
+4. In Obsidian, go to **Settings** → **Community plugins**, click **Reload plugins**, and enable **TableBase Plus**.
 
 ---
 
 ## 🚀 How It Works
 
-TableBase reads and writes standard, human-readable Markdown tables — no proprietary files or hidden databases:
+TableBase Plus reads and writes standard, human-readable Markdown tables — no proprietary files or hidden databases:
 
 ### 1. Standard Markdown Tables (Reading View)
 Create normal Markdown tables anywhere in your notes:
@@ -38,7 +33,7 @@ Create normal Markdown tables anywhere in your notes:
 | Implement auth API | Done | Backend | 2026-09-18 | 800 | [x] |
 ```
 
-Press **`Cmd + E`** (switch to **Reading View**) — TableBase automatically renders the table as an interactive database.
+Press **`Cmd + E`** (switch to **Reading View**) — TableBase Plus automatically renders the table as an interactive database.
 
 ### 2. Interactive Code Blocks (Live Preview & Reading View)
 To view and edit an interactive database directly in **Live Preview** (Edit mode), wrap your table in a ```` ```tablebase ```` code block:
@@ -50,6 +45,17 @@ To view and edit an interactive database directly in **Live Preview** (Edit mode
 | Security audit | Done | Critical | 2026-09-18 | [x] |
 ```
 ````
+
+### 3. Column Width (`w=`)
+Add `w=<pixels>` to a column header to fix its width (60–2000 px). Long text wraps inside the column, and the width is saved with the note:
+
+```markdown
+| Task [text:w=300] | Notes [text:w=420] | Budget ($) [number:sum,w=120] |
+| :--- | :--- | :---: |
+| Redesign landing page | A long description that wraps onto several lines inside the column | 1200 |
+```
+
+Drag a column's right edge in the interactive view and `w=` is written to the header for you. Columns without `w=` use the **Default column width** setting.
 
 ---
 
@@ -108,7 +114,7 @@ To view and edit an interactive database directly in **Live Preview** (Edit mode
 
 ## 📝 Column Type Syntax
 
-TableBase automatically detects column types based on content, or you can explicitly tag headers in your Markdown:
+TableBase Plus automatically detects column types based on content, or you can explicitly tag headers in your Markdown:
 
 | Syntax | Column Type | Description |
 | :--- | :--- | :--- |
@@ -143,7 +149,7 @@ Columns without `w=` use the **Default column width** (240 px). Drag a column's 
 
 ## ⚙️ Settings
 
-Configure under **Obsidian Settings → TableBase**:
+Configure under **Obsidian Settings → TableBase Plus**:
 * **Default Date Format**: Set preferred date display (`YYYY-MM-DD`, `DD.MM.YYYY`, etc.).
 * **Default Tag Format**: Format tags as comma-separated, `#hashtags`, or `[[wikilinks]]`.
 * **Row Numbers**: Toggle row numbers globally.
@@ -158,10 +164,16 @@ Configure under **Obsidian Settings → TableBase**:
 
 * All data is stored directly in your `.md` files as standard GitHub-Flavored Markdown tables.
 * No hidden database files, no proprietary formats, no remote servers.
-* If you disable or remove TableBase, all your notes and tables remain completely intact and readable anywhere.
+* If you disable or remove TableBase Plus, all your notes and tables remain completely intact and readable anywhere.
 
 ---
 
 ## 📄 License
 
-MIT License © 2026 Aleksei Chekodanov
+MIT License © 2026 Emil Smolinski
+
+---
+
+## 🙏 Credits
+
+This plugin is based on the work of Aleksei Chekodanov ([a269ch](https://github.com/a269ch)) and his [obsidian-tablebase](https://github.com/a269ch/obsidian-tablebase), released under the MIT license. His copyright notice is kept in [LICENSE](LICENSE).

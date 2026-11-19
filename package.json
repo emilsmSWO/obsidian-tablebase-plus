@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-tablebase",
+  "name": "obsidian-tablebase-plus",
   "version": "0.1.1",
   "description": "Turn standard Markdown tables into interactive Notion-like databases: Kanban board view, multi-select tags, date pickers, calculations, and advanced filters",
   "main": "main.js",
@@ -25,12 +25,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/a269ch/obsidian-tablebase.git"
+    "url": "https://github.com/emilsmSWO/obsidian-tablebase-plus.git"
   },
   "bugs": {
-    "url": "https://github.com/a269ch/obsidian-tablebase/issues"
+    "url": "https://github.com/emilsmSWO/obsidian-tablebase-plus/issues"
   },
-  "homepage": "https://github.com/a269ch/obsidian-tablebase#readme",
+  "homepage": "https://github.com/emilsmSWO/obsidian-tablebase-plus#readme",
   "author": "Aleksei Chekodanov",
   "license": "MIT",
   "devDependencies": {

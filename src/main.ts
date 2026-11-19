@@ -27,7 +27,7 @@ export default class TableBasePlugin extends Plugin {
     await this.settingsService.loadSettings();
 
     this.registerHoverLinkSource(HOVER_LINK_SOURCE, {
-      display: "TableBase",
+      display: "TableBase Plus",
       defaultMod: true,
     });
 

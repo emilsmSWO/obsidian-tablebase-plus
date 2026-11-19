@@ -114,7 +114,7 @@ export class TableViewController {
           params.getLineStart?.()
         );
         if (!saved) {
-          new Notice("TableBase: could not find this table in the note, so the change was not saved.");
+          new Notice("TableBase Plus: could not find this table in the note, so the change was not saved.");
           return;
         }
         currentSource = written;

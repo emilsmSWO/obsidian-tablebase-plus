@@ -16,6 +16,8 @@ export interface TagSelectModalOptions {
   onSave: (formattedCellText: string, tags: MultiSelectTag[]) => void;
   onTagColorChange?: (tagName: string, color: TagColor) => void;
   onReloadList?: () => Promise<void>;
+  /** Only the listed options can be picked: no new options and no color changes. */
+  restricted?: boolean;
 }
 
 export class TagSelectModal extends Modal {
@@ -147,7 +149,7 @@ export class TagSelectModal extends Modal {
 
     const trimmedQuery = this.searchQuery.trim();
     const exactMatch = existingTags.some((t) => t.name.toLowerCase() === query);
-    if (trimmedQuery && !exactMatch) {
+    if (trimmedQuery && !exactMatch && !this.options.restricted) {
       this.renderCreateSection(createContainer, trimmedQuery);
     }
   }
@@ -167,6 +169,14 @@ export class TagSelectModal extends Modal {
       appendIcon(rightArea.createSpan({ cls: "ms-check-icon" }), ICON_CHECK);
     }
 
+    itemRow.addEventListener("click", () => {
+      this.selectedTags = isSelected
+        ? this.selectedTags.filter((t) => t.id !== tag.id)
+        : [...this.selectedTags, tag];
+      this.renderUI();
+    });
+    if (this.options.restricted) return;
+
     const colorBtn = rightArea.createSpan({
       cls: "ms-tag-color-btn",
       attr: { title: "Change tag color" },
@@ -178,13 +188,6 @@ export class TagSelectModal extends Modal {
       this.activeColorPickerTagId =
         this.activeColorPickerTagId === tag.id ? null : tag.id;
       this.renderAvailableList();
-    });
-
-    itemRow.addEventListener("click", () => {
-      this.selectedTags = isSelected
-        ? this.selectedTags.filter((t) => t.id !== tag.id)
-        : [...this.selectedTags, tag];
-      this.renderUI();
     });
 
     if (this.activeColorPickerTagId !== tag.id) return;

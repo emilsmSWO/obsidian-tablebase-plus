@@ -17,6 +17,8 @@ export interface SingleSelectPopoverOptions {
   onSelect: (selectedTag: string) => Promise<void>;
   onTagColorChange?: (tagName: string, color: TagColor) => Promise<void>;
   onReloadList?: () => Promise<void>;
+  /** Only the listed options can be picked: no new options and no color changes. */
+  restricted?: boolean;
 }
 
 const OPTION_ITEM_SELECTOR = ".ms-select-option-item, .ms-create-option-item";
@@ -151,7 +153,7 @@ export class SingleSelectPopover {
       }
     }
 
-    if (this.searchQuery.trim() && !exactMatch) {
+    if (this.searchQuery.trim() && !exactMatch && !this.options.restricted) {
       this.renderCreateOption(container, this.searchQuery.trim());
     }
 
@@ -191,6 +193,11 @@ export class SingleSelectPopover {
       appendIcon(rightArea.createSpan({ cls: "ms-prop-check" }), ICON_CHECK);
     }
 
+    itemRow.addEventListener("click", () => {
+      void this.selectOption(tag.name);
+    });
+    if (this.options.restricted) return;
+
     const colorBtn = rightArea.createSpan({
       cls: "ms-tag-color-btn",
       attr: { title: "Change tag color" },
@@ -202,10 +209,6 @@ export class SingleSelectPopover {
       this.activeColorPickerTagId =
         this.activeColorPickerTagId === tag.id ? null : tag.id;
       this.renderOptionsList();
-    });
-
-    itemRow.addEventListener("click", () => {
-      void this.selectOption(tag.name);
     });
 
     if (this.activeColorPickerTagId !== tag.id) return;

@@ -1,7 +1,7 @@
 import { formatDateByOption, parseAnyDate } from "../../core/date-utils";
 import { normalizeDatetime } from "../../core/datetime-utils";
 import { isCellChecked } from "../../core/sort-engine";
-import { parseCellTags } from "../../core/tag-parser";
+import { parseColumnTags } from "../../core/dictionary";
 import { ColumnAlignment, MarkdownTableRow, TableColumn } from "../../types";
 import { appendIcon } from "../../utils/dom";
 import { attachStrictNumericInputHandlers, sanitizeNumericCellValue } from "../../utils/input";
@@ -147,7 +147,7 @@ export class CellRenderer {
     displayValue: string,
     rawValue: string
   ): void {
-    const tags = parseCellTags(displayValue, this.ctx.settings.customTagColors);
+    const tags = parseColumnTags(displayValue, col, this.ctx.settings.customTagColors);
     const container = td.createDiv({ cls: "ms-cell-badges-container is-single-select" });
 
     if (tags.length === 0) {
@@ -179,7 +179,7 @@ export class CellRenderer {
     displayValue: string,
     rawValue: string
   ): void {
-    const tags = parseCellTags(displayValue, this.ctx.settings.customTagColors);
+    const tags = parseColumnTags(displayValue, col, this.ctx.settings.customTagColors);
     const container = td.createDiv({ cls: "ms-cell-badges-container" });
 
     if (tags.length === 0) {
@@ -277,7 +277,8 @@ export class CellRenderer {
         await this.ctx.actions.onTagColorChange(tagName, color);
         this.ctx.render();
       },
-      onReloadList: () => this.reloadList(colIndex),
+      restricted: Boolean(col.dictionaryColors),
+      onReloadList: col.dictionaryColors ? undefined : () => this.reloadList(colIndex),
       onSelect: async (selectedTag) => {
         await this.ctx.actions.onCellUpdate(row.rowIndex, colIndex, selectedTag);
         this.ctx.render();
@@ -302,7 +303,8 @@ export class CellRenderer {
         void this.ctx.actions.onTagColorChange(tagName, color);
         this.ctx.render();
       },
-      onReloadList: () => this.reloadList(colIndex),
+      restricted: Boolean(col.dictionaryColors),
+      onReloadList: col.dictionaryColors ? undefined : () => this.reloadList(colIndex),
       onSave: (formattedText) => {
         void this.ctx.actions.onCellUpdate(row.rowIndex, colIndex, formattedText).then(() => {
           this.ctx.render();

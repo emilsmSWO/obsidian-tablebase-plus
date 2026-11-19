@@ -5,6 +5,7 @@ import { DATETIME_FORMAT_OPTIONS } from "../core/datetime-utils";
 import { SettingsService } from "../services/settings-service";
 import { DateFormatOption, DEFAULT_SETTINGS, TagColor, TagFormat } from "../types";
 import { createColorPickerElement } from "./color-picker";
+import { renderDictionariesEditor } from "./dictionaries-editor";
 import { createTagBadge } from "./tag-badge";
 
 const MAX_HEIGHT_DESC =
@@ -26,6 +27,9 @@ const DATETIME_FORMAT_DESC =
   "Format used when displaying and entering values in datetime columns. Date-only and time-only formats work too.";
 const AUTO_UPDATE_DESC =
   "Set columns marked [datetime:autoupdate] to the current time whenever a row is changed in TableBase Plus. Edits made outside Obsidian are not tracked.";
+
+const DICTIONARIES_DESC =
+  "Named lists of select and multi-select options with colors. Bind a column to one in its header menu (List source) or with [select:dict=Name].";
 
 const COLUMN_WIDTH_DESC =
   "Width in pixels of columns that have no width of their own. Drag a column edge to set one; it is saved in the header as [text:w=300].";
@@ -164,6 +168,17 @@ export class TableBaseSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: "Dictionaries",
+        desc: DICTIONARIES_DESC,
+        render: (setting) => {
+          setting.setName("Dictionaries").setDesc(DICTIONARIES_DESC);
+          setting.settingEl.addClass("ms-dict-setting");
+          const host = setting.settingEl.createDiv({ cls: "ms-dict-editor" });
+          renderDictionariesEditor(host, this.app, this.settingsService);
+          return () => host.remove();
+        },
+      },
+      {
         name: "Custom tag colors",
         desc: "Customize colors for specific tags. These override automatic colors across all tables and boards.",
       },
@@ -235,6 +250,7 @@ export class TableBaseSettingTab extends PluginSettingTab {
     this.renderColumnDetection(containerEl);
     this.renderFormatting(containerEl);
     this.renderAppearance(containerEl);
+    this.renderDictionaries(containerEl);
     this.renderCustomTagColors(containerEl);
     this.renderReset(containerEl);
   }
@@ -436,6 +452,16 @@ export class TableBaseSettingTab extends PluginSettingTab {
             await this.settingsService.updateSettings({ showEmptyBoardProperties: value });
           })
       );
+  }
+
+  private renderDictionaries(containerEl: HTMLElement): void {
+    this.addHeading(containerEl, "Dictionaries");
+    containerEl.createEl("p", { cls: "setting-item-description", text: DICTIONARIES_DESC });
+    renderDictionariesEditor(
+      containerEl.createDiv({ cls: "ms-dict-editor" }),
+      this.app,
+      this.settingsService
+    );
   }
 
   private renderCustomTagColors(containerEl: HTMLElement): void {

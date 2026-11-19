@@ -1,5 +1,6 @@
 import { moveListOrders, pruneListOrders } from "../core/list-order";
-import { DEFAULT_SETTINGS, PluginSettings, TagColor } from "../types";
+import { findDictionary, validateDictionaryName, validateItems } from "../core/dictionary";
+import { DEFAULT_SETTINGS, DictionaryItem, PluginSettings, TagColor } from "../types";
 
 export interface SettingsStorage {
   loadData(): Promise<Record<string, unknown> | null>;
@@ -61,6 +62,43 @@ export class SettingsService {
       delete this.settings.customTagColors[key];
       await this.saveSettings();
     }
+  }
+
+  /** Dictionary changes return an error message when the change is not allowed, else null. */
+  public async addDictionary(name: string, items: DictionaryItem[] = []): Promise<string | null> {
+    const dictionaries = this.settings.dictionaries ?? [];
+    const error = validateDictionaryName(name, dictionaries);
+    if (error) return error;
+    await this.updateSettings({
+      dictionaries: [...dictionaries, { name: name.trim(), items: items.map((item) => ({ ...item })) }],
+    });
+    return null;
+  }
+
+  public async cloneDictionary(source: string, newName: string): Promise<string | null> {
+    const original = findDictionary(this.settings.dictionaries, source);
+    return original ? this.addDictionary(newName, original.items) : "The dictionary no longer exists.";
+  }
+
+  public async saveDictionary(name: string, items: DictionaryItem[]): Promise<string | null> {
+    const dictionaries = this.settings.dictionaries ?? [];
+    const target = findDictionary(dictionaries, name);
+    if (!target) return "The dictionary no longer exists.";
+    const cleaned = items.map((item) => ({ ...item, name: item.name.trim() }));
+    const error = validateItems(cleaned);
+    if (error) return error;
+    await this.updateSettings({
+      dictionaries: dictionaries.map((item) =>
+        item === target ? { name: target.name, items: cleaned } : item
+      ),
+    });
+    return null;
+  }
+
+  public async deleteDictionary(name: string): Promise<void> {
+    const dictionaries = this.settings.dictionaries ?? [];
+    const target = findDictionary(dictionaries, name);
+    if (target) await this.updateSettings({ dictionaries: dictionaries.filter((d) => d !== target) });
   }
 
   public async moveListOrders(oldPath: string, newPath: string | null): Promise<void> {

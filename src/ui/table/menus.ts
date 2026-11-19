@@ -22,6 +22,7 @@ import {
   ICON_EYE_OFF,
   ICON_TRASH,
   ICON_TYPE_NUMBER,
+  ICON_TYPE_SELECT,
 } from "../icons";
 import { confirmAction } from "../modals/confirm-modal";
 import { RenameColumnModal } from "../modals/rename-column-modal";
@@ -470,6 +471,7 @@ export class TableMenus {
     }
     menu.createDiv({ cls: "ms-menu-divider" });
     this.appendColumnTypeSection(menu, column, columnIndex);
+    this.appendListSourceSection(menu, column, columnIndex);
     menu.createDiv({ cls: "ms-menu-divider" });
 
     addMenuItem(menu, ICON_ARROW_LEFT, "Insert left", () =>
@@ -586,6 +588,39 @@ export class TableMenus {
           menu.remove();
         });
       }
+    }
+  }
+
+  /** "List source": the column's own values (custom) or one of the dictionaries from the settings. */
+  private appendListSourceSection(
+    menu: HTMLElement,
+    column: TableColumn,
+    columnIndex: number
+  ): void {
+    const dictionaries = this.ctx.settings.dictionaries ?? [];
+    const change = this.ctx.actions.onColumnDictionaryChange;
+    if (!change || dictionaries.length === 0) return;
+    if (column.type !== "select" && column.type !== "multi-select") return;
+
+    const section = menu.createDiv({ cls: "ms-menu-section" });
+    section.createDiv({ cls: "ms-menu-section-title", text: "List source" });
+    const bound = column.dictionaryColors ? column.dictionary?.toLowerCase() : undefined;
+
+    addCheckableItem(section, ICON_TYPE_SELECT, "Custom (values from the table)", !bound, () => {
+      void change(columnIndex, undefined);
+      menu.remove();
+    });
+    for (const dictionary of dictionaries) {
+      addCheckableItem(
+        section,
+        ICON_TYPE_SELECT,
+        dictionary.name,
+        bound === dictionary.name.toLowerCase(),
+        () => {
+          void change(columnIndex, dictionary.name);
+          menu.remove();
+        }
+      );
     }
   }
 

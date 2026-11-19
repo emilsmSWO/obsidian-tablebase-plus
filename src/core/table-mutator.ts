@@ -10,6 +10,7 @@ import {
 import { isCalculationAllowedFor } from "./calculation-engine";
 import { clampColumnWidth, parseWidthParam } from "./column-width";
 import { DEFAULT_DATETIME_FORMAT, formatDatetime, parseDatetimeParams } from "./datetime-utils";
+import { parseDictParam } from "./dictionary";
 import { formatDateByOption, parseDateByOption } from "./date-utils";
 import { formatColumnAlignmentToken } from "./markdown-parser";
 
@@ -133,6 +134,7 @@ export function formatColumnHeader(
     width?: number;
     datetimeFormat?: string;
     autoUpdate?: boolean;
+    dictionary?: string;
   } = {}
 ): string {
   const cleanName = stripTypeAnnotation(name);
@@ -143,7 +145,11 @@ export function formatColumnHeader(
   // a type the user picked by hand has to be written down to survive — and a
   // calculation or width has nowhere to live without one.
   const width = typeof options.width === "number" ? clampColumnWidth(options.width) : undefined;
-  if (!options.explicit && !calculation && width === undefined) {
+  const dictionary =
+    (type === "select" || type === "multi-select") && options.dictionary
+      ? options.dictionary
+      : undefined;
+  if (!options.explicit && !calculation && width === undefined && !dictionary) {
     if (type === "text") {
       const wouldBeDetectedAsAnotherType =
         SINGLE_SELECT_KEYWORDS.test(cleanName) ||
@@ -162,6 +168,9 @@ export function formatColumnHeader(
   if (type === "datetime") {
     params.push(options.datetimeFormat || DEFAULT_DATETIME_FORMAT);
     if (options.autoUpdate) params.push("autoupdate");
+  }
+  if (dictionary) {
+    params.push(`dict=${dictionary}`);
   }
   if (calculation) {
     params.push(calculation);
@@ -243,18 +252,31 @@ export function applyRenameColumn(
   const annotatedFormat = (annotatedParams ?? "")
     .split(",")
     .map((param) => param.trim())
-    .filter((param) => param.length > 0 && parseWidthParam(param) === undefined)
+    .filter(
+      (param) =>
+        param.length > 0 &&
+        parseWidthParam(param) === undefined &&
+        parseDictParam(param) === undefined
+    )
     .join(",");
   const annotatedDatetime = parseDatetimeParams(annotatedParams);
   const targetDateFormat = annotatedFormat
     ? (annotatedFormat.toUpperCase() as DateFormatOption)
     : col?.dateFormat;
   const targetWidth = parseWidthParam(explicitTypeMatch?.[2]) ?? col?.width;
+  const isList = targetType === "select" || targetType === "multi-select";
+  const targetDictionary = isList
+    ? explicitTypeMatch
+      ? parseDictParam(annotatedParams)
+      : col?.dictionary
+    : undefined;
 
   if (col) {
     col.name = cleanName;
     col.type = targetType;
     if (targetWidth !== undefined) col.width = targetWidth;
+    if (targetDictionary) col.dictionary = targetDictionary;
+    else delete col.dictionary;
     if (targetType === "date") {
       col.dateFormat = targetDateFormat || "YYYY-MM-DD";
     } else {
@@ -282,6 +304,7 @@ export function applyRenameColumn(
       width: targetWidth,
       datetimeFormat: col?.datetimeFormat,
       autoUpdate: col?.autoUpdate,
+      dictionary: targetDictionary,
     }
   );
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
@@ -326,6 +349,11 @@ export function applyChangeColumnType(
     delete col.autoUpdate;
   }
 
+  if (newType !== "select" && newType !== "multi-select") {
+    delete col.dictionary;
+    delete col.dictionaryColors;
+  }
+
   // "Sum" makes no sense on a checkbox, so an incompatible one is dropped.
   if (!isCalculationAllowedFor(newType, col.calculation)) {
     delete col.calculation;
@@ -340,6 +368,7 @@ export function applyChangeColumnType(
     width: col.width,
     datetimeFormat: col.datetimeFormat,
     autoUpdate: col.autoUpdate,
+    dictionary: col.dictionary,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;
@@ -369,6 +398,30 @@ export function applyChangeColumnAutoUpdate(
     width: col.width,
     datetimeFormat: col.datetimeFormat,
     autoUpdate: col.autoUpdate,
+    dictionary: col.dictionary,
+  });
+}
+
+/** Binds a select or multi-select column to a dictionary, or back to a custom list (undefined). */
+export function applyChangeColumnDictionary(
+  tableData: MarkdownTableData,
+  columns: TableColumn[],
+  colIndex: number,
+  dictionary: string | undefined
+): void {
+  const col = columns[colIndex];
+  if (!col || (col.type !== "select" && col.type !== "multi-select")) return;
+
+  if (dictionary) col.dictionary = dictionary;
+  else delete col.dictionary;
+  delete col.dictionaryColors;
+
+  const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
+  tableData.headers[colIndex] = formatColumnHeader(col.name, col.type, col.dateFormat, {
+    explicit: hadExplicitType,
+    calculation: col.calculation,
+    width: col.width,
+    dictionary: col.dictionary,
   });
 }
 
@@ -448,6 +501,7 @@ export function applyChangeColumnCalculation(
     width: col.width,
     datetimeFormat: col.datetimeFormat,
     autoUpdate: col.autoUpdate,
+    dictionary: col.dictionary,
   });
 
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
@@ -473,6 +527,7 @@ export function applyChangeColumnWidth(
     width: col.width,
     datetimeFormat: col.datetimeFormat,
     autoUpdate: col.autoUpdate,
+    dictionary: col.dictionary,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;

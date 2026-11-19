@@ -9,6 +9,7 @@ import {
 } from "../types";
 import { isCalculationAllowedFor } from "./calculation-engine";
 import { clampColumnWidth, parseWidthParam } from "./column-width";
+import { DEFAULT_DATETIME_FORMAT, formatDatetime, parseDatetimeParams } from "./datetime-utils";
 import { formatDateByOption, parseDateByOption } from "./date-utils";
 import { formatColumnAlignmentToken } from "./markdown-parser";
 
@@ -21,6 +22,32 @@ export function applyCellUpdate(
   if (tableData.rows[rowIndex]) {
     tableData.rows[rowIndex].cells[colIndex] = newValue;
   }
+}
+
+/**
+ * Writes the current time into the row's "datetime:autoupdate" columns, except
+ * `skipColIndex` (the column being edited by hand). Returns what was written so
+ * a document-level save can repeat it.
+ */
+export function applyAutoUpdateStamps(
+  tableData: MarkdownTableData,
+  columns: TableColumn[],
+  rowIndex: number,
+  defaultFormat: string,
+  skipColIndex?: number,
+  now: Date = new Date()
+): Array<{ colIndex: number; value: string }> {
+  const row = tableData.rows[rowIndex];
+  if (!row) return [];
+
+  const stamps: Array<{ colIndex: number; value: string }> = [];
+  for (const col of columns) {
+    if (col.type !== "datetime" || !col.autoUpdate || col.index === skipColIndex) continue;
+    const value = formatDatetime(now, col.datetimeFormat || defaultFormat);
+    row.cells[col.index] = value;
+    stamps.push({ colIndex: col.index, value });
+  }
+  return stamps;
 }
 
 export function applyAddRow(
@@ -81,7 +108,7 @@ export function applyDeleteRow(
 }
 
 export const TYPE_ANNOTATION_REGEX =
-  /\s*\[(text|multi-select|select|number|checkbox|date)(?::([^\]]+))?\]$/i;
+  /\s*\[(text|multi-select|select|number|checkbox|datetime|date)(?::([^\]]+))?\]$/i;
 
 export const SINGLE_SELECT_KEYWORDS =
   /^(status|priority|state|stage)$/i;
@@ -100,7 +127,13 @@ export function formatColumnHeader(
   name: string,
   type: ColumnType,
   dateFormat?: DateFormatOption,
-  options: { explicit?: boolean; calculation?: CalculationType; width?: number } = {}
+  options: {
+    explicit?: boolean;
+    calculation?: CalculationType;
+    width?: number;
+    datetimeFormat?: string;
+    autoUpdate?: boolean;
+  } = {}
 ): string {
   const cleanName = stripTypeAnnotation(name);
   const calculation =
@@ -126,6 +159,10 @@ export function formatColumnHeader(
   if (type === "date") {
     params.push(dateFormat || "YYYY-MM-DD");
   }
+  if (type === "datetime") {
+    params.push(options.datetimeFormat || DEFAULT_DATETIME_FORMAT);
+    if (options.autoUpdate) params.push("autoupdate");
+  }
   if (calculation) {
     params.push(calculation);
   }
@@ -144,14 +181,18 @@ export function applyAddColumn(
   name: string,
   type: ColumnType,
   atIndex?: number,
-  dateFormat?: DateFormatOption
+  dateFormat?: DateFormatOption,
+  datetime: { format?: string; autoUpdate?: boolean } = {}
 ): TableColumn {
   const insertIdx =
     atIndex !== undefined && atIndex >= 0 && atIndex <= tableData.headers.length
       ? atIndex
       : tableData.headers.length;
 
-  const headerText = formatColumnHeader(name, type, dateFormat);
+  const headerText = formatColumnHeader(name, type, dateFormat, {
+    datetimeFormat: datetime.format,
+    autoUpdate: datetime.autoUpdate,
+  });
   const cleanName = stripTypeAnnotation(name);
 
   tableData.headers.splice(insertIdx, 0, headerText);
@@ -170,6 +211,12 @@ export function applyAddColumn(
     type,
     align: type === "checkbox" ? "center" : type === "number" ? "right" : "left",
     ...(type === "date" ? { dateFormat: dateFormat || "YYYY-MM-DD" } : {}),
+    ...(type === "datetime"
+      ? {
+          datetimeFormat: datetime.format || DEFAULT_DATETIME_FORMAT,
+          ...(datetime.autoUpdate ? { autoUpdate: true } : {}),
+        }
+      : {}),
   };
 
   columns.splice(insertIdx, 0, newCol);
@@ -192,11 +239,13 @@ export function applyRenameColumn(
     ? col.type
     : "text";
 
-  const annotatedFormat = (explicitTypeMatch?.[2] ?? "")
+  const annotatedParams = explicitTypeMatch?.[2];
+  const annotatedFormat = (annotatedParams ?? "")
     .split(",")
     .map((param) => param.trim())
     .filter((param) => param.length > 0 && parseWidthParam(param) === undefined)
     .join(",");
+  const annotatedDatetime = parseDatetimeParams(annotatedParams);
   const targetDateFormat = annotatedFormat
     ? (annotatedFormat.toUpperCase() as DateFormatOption)
     : col?.dateFormat;
@@ -211,6 +260,15 @@ export function applyRenameColumn(
     } else {
       delete col.dateFormat;
     }
+    if (targetType === "datetime") {
+      col.datetimeFormat =
+        annotatedDatetime.format || col.datetimeFormat || DEFAULT_DATETIME_FORMAT;
+      if (explicitTypeMatch) col.autoUpdate = annotatedDatetime.autoUpdate || undefined;
+      if (!col.autoUpdate) delete col.autoUpdate;
+    } else {
+      delete col.datetimeFormat;
+      delete col.autoUpdate;
+    }
   }
 
   const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
@@ -222,6 +280,8 @@ export function applyRenameColumn(
       explicit: hadExplicitType || Boolean(explicitTypeMatch),
       calculation: col?.calculation,
       width: targetWidth,
+      datetimeFormat: col?.datetimeFormat,
+      autoUpdate: col?.autoUpdate,
     }
   );
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
@@ -234,7 +294,8 @@ export function applyChangeColumnType(
   columns: TableColumn[],
   colIndex: number,
   newType: ColumnType,
-  dateFormat?: DateFormatOption
+  dateFormat?: DateFormatOption,
+  datetimeFormat?: string
 ): void {
   const col = columns[colIndex];
   if (!col) return;
@@ -258,6 +319,12 @@ export function applyChangeColumnType(
   } else {
     delete col.dateFormat;
   }
+  if (newType === "datetime") {
+    col.datetimeFormat = datetimeFormat || col.datetimeFormat || DEFAULT_DATETIME_FORMAT;
+  } else {
+    delete col.datetimeFormat;
+    delete col.autoUpdate;
+  }
 
   // "Sum" makes no sense on a checkbox, so an incompatible one is dropped.
   if (!isCalculationAllowedFor(newType, col.calculation)) {
@@ -271,6 +338,8 @@ export function applyChangeColumnType(
     explicit: true,
     calculation: col.calculation,
     width: col.width,
+    datetimeFormat: col.datetimeFormat,
+    autoUpdate: col.autoUpdate,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;
@@ -351,6 +420,8 @@ export function applyChangeColumnCalculation(
     explicit: hadExplicitType,
     calculation: col.calculation,
     width: col.width,
+    datetimeFormat: col.datetimeFormat,
+    autoUpdate: col.autoUpdate,
   });
 
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
@@ -374,6 +445,8 @@ export function applyChangeColumnWidth(
     explicit: hadExplicitType,
     calculation: col.calculation,
     width: col.width,
+    datetimeFormat: col.datetimeFormat,
+    autoUpdate: col.autoUpdate,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;

@@ -39,7 +39,7 @@ describe("Adding a Date column", () => {
     document.body.innerHTML = "";
   });
 
-  it("should render all six property type cards", () => {
+  it("should render all seven property type cards", () => {
     const { modal } = openModal();
     const labels = Array.from(
       modal.contentEl.querySelectorAll(".ms-type-card-label")
@@ -51,6 +51,7 @@ describe("Adding a Date column", () => {
       "Select",
       "Multi-select",
       "Date",
+      "Datetime",
       "Checkbox",
     ]);
   });

@@ -183,6 +183,7 @@ export class KeyboardController {
         this.cells.openTagSelectModal(row, column, focused.col, rawValue);
         return;
       case "date":
+      case "datetime":
         this.cells.openDatePicker(td, focused.row, focused.col, rawValue);
         return;
       default:

@@ -111,6 +111,29 @@ describe("TableBaseSettingTab", () => {
     expect(settingsService.getSettings().defaultTagFormat).toBe("wikilink");
   });
 
+  it("should offer the datetime settings right after the date format", async () => {
+    const plugin = createMockPlugin();
+    const settingsService = new SettingsService(plugin);
+    await settingsService.loadSettings();
+
+    const tab = new TableBaseSettingTab({} as App, plugin, settingsService);
+    tab.display();
+
+    const names = Array.from(
+      tab.containerEl.querySelectorAll<HTMLElement>(".setting-item-name")
+    ).map((el) => el.textContent?.trim());
+    const dateIndex = names.indexOf("Default date format");
+    expect(names.slice(dateIndex, dateIndex + 3)).toEqual([
+      "Default date format",
+      "Default datetime format",
+      "Auto-update last update datetime column",
+    ]);
+
+    const toggles = tab.containerEl.querySelectorAll<HTMLElement>(".checkbox-container");
+    toggles[2].click();
+    expect(settingsService.getSettings().autoUpdateDatetime).toBe(false);
+  });
+
   it("should update showRowNumbers when appearance toggle is clicked", async () => {
     const plugin = createMockPlugin();
     const settingsService = new SettingsService(plugin);
@@ -120,7 +143,7 @@ describe("TableBaseSettingTab", () => {
     tab.display();
 
     const toggles = tab.containerEl.querySelectorAll<HTMLElement>(".checkbox-container");
-    const rowNumberToggle = toggles[2];
+    const rowNumberToggle = toggles[3];
     expect(rowNumberToggle).toBeDefined();
 
     rowNumberToggle.click();

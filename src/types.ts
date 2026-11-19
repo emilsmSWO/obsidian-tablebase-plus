@@ -24,7 +24,8 @@ export type ColumnType =
   | "select"
   | "number"
   | "checkbox"
-  | "date";
+  | "date"
+  | "datetime";
 
 export type CalculationType =
   | "none"
@@ -54,6 +55,10 @@ export interface TableColumn {
   calculation?: CalculationType;
   uniqueTags?: MultiSelectTag[];
   dateFormat?: DateFormatOption;
+  /** Token format of a datetime column, e.g. "YYYY-MM-DD HH:mm". */
+  datetimeFormat?: string;
+  /** Datetime column stamped with the current time whenever its row is changed. */
+  autoUpdate?: boolean;
 }
 
 export type SortDirection = "asc" | "desc";
@@ -162,6 +167,8 @@ export type DateFormatOption =
 export interface PluginSettings {
   defaultTagFormat: TagFormat;
   dateFormat?: DateFormatOption;
+  datetimeFormat: string;
+  autoUpdateDatetime: boolean;
   autoConvertMarkdownTables: boolean;
   autoDetectMultiSelect: boolean;
   multiSelectColumnNames: string[];
@@ -177,6 +184,8 @@ export interface PluginSettings {
 
 export const DEFAULT_SETTINGS: PluginSettings = {
   defaultTagFormat: "comma",
+  datetimeFormat: "YYYY-MM-DD HH:mm",
+  autoUpdateDatetime: true,
   autoConvertMarkdownTables: true,
   autoDetectMultiSelect: true,
   multiSelectColumnNames: [

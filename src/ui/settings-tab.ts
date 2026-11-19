@@ -1,6 +1,7 @@
 import { App, Plugin, PluginSettingTab, Setting, SettingDefinitionItem } from "obsidian";
 import { clampColumnWidth, DEFAULT_COLUMN_WIDTH, MAX_COLUMN_WIDTH, MIN_COLUMN_WIDTH } from "../core/column-width";
 import { DATE_FORMAT_OPTIONS } from "../core/date-utils";
+import { DATETIME_FORMAT_OPTIONS } from "../core/datetime-utils";
 import { SettingsService } from "../services/settings-service";
 import { DateFormatOption, DEFAULT_SETTINGS, TagColor, TagFormat } from "../types";
 import { createColorPickerElement } from "./color-picker";
@@ -12,6 +13,11 @@ const MAX_HEIGHT_DESC =
 function clampMaxTableHeight(percent: number): number {
   return Math.min(100, Math.max(0, Math.round(percent)));
 }
+
+const DATETIME_FORMAT_DESC =
+  "Format used when displaying and entering values in datetime columns. Date-only and time-only formats work too.";
+const AUTO_UPDATE_DESC =
+  "Set columns marked [datetime:autoupdate] to the current time whenever a row is changed in TableBase Plus. Edits made outside Obsidian are not tracked.";
 
 const COLUMN_WIDTH_DESC =
   "Width in pixels of columns that have no width of their own. Drag a column edge to set one; it is saved in the header as [text:w=300].";
@@ -28,6 +34,11 @@ export class TableBaseSettingTab extends PluginSettingTab {
     const dateOptions: Record<string, string> = {};
     for (const option of DATE_FORMAT_OPTIONS) {
       dateOptions[option.format] = `${option.label} (${option.example})`;
+    }
+
+    const datetimeOptions: Record<string, string> = {};
+    for (const option of DATETIME_FORMAT_OPTIONS) {
+      datetimeOptions[option.format] = option.label;
     }
 
     return [
@@ -76,6 +87,23 @@ export class TableBaseSettingTab extends PluginSettingTab {
           type: "dropdown",
           key: "dateFormat",
           options: dateOptions,
+        },
+      },
+      {
+        name: "Default datetime format",
+        desc: DATETIME_FORMAT_DESC,
+        control: {
+          type: "dropdown",
+          key: "datetimeFormat",
+          options: datetimeOptions,
+        },
+      },
+      {
+        name: "Auto-update last update datetime column",
+        desc: AUTO_UPDATE_DESC,
+        control: {
+          type: "toggle",
+          key: "autoUpdateDatetime",
         },
       },
       {
@@ -272,6 +300,27 @@ export class TableBaseSettingTab extends PluginSettingTab {
             });
           });
       });
+
+    new Setting(containerEl)
+      .setName("Default datetime format")
+      .setDesc(DATETIME_FORMAT_DESC)
+      .addDropdown((dropdown) => {
+        for (const option of DATETIME_FORMAT_OPTIONS) {
+          dropdown.addOption(option.format, option.label);
+        }
+        dropdown.setValue(settings.datetimeFormat).onChange(async (value) => {
+          await this.settingsService.updateSettings({ datetimeFormat: value });
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Auto-update last update datetime column")
+      .setDesc(AUTO_UPDATE_DESC)
+      .addToggle((toggle) =>
+        toggle.setValue(settings.autoUpdateDatetime).onChange(async (value) => {
+          await this.settingsService.updateSettings({ autoUpdateDatetime: value });
+        })
+      );
   }
 
   private renderAppearance(containerEl: HTMLElement): void {

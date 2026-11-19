@@ -15,6 +15,7 @@ import {
 import {
   applyAddColumn,
   applyAddRow,
+  applyAutoUpdateStamps,
   applyCellUpdate,
   applyChangeColumnAlignment,
   applyChangeColumnCalculation,
@@ -56,7 +57,14 @@ export interface InlineTableViewParams {
 }
 
 export type TableOperation =
-  | { kind: "cell"; rowIndex: number; colIndex: number; value: string }
+  | {
+      kind: "cell";
+      rowIndex: number;
+      colIndex: number;
+      value: string;
+      /** Auto-update timestamps written in the same save as the edit. */
+      stamps?: Array<{ colIndex: number; value: string }>;
+    }
   | { kind: "add-row"; cells: string[]; atIndex: number }
   | { kind: "delete-row"; rowIndex: number }
   | { kind: "add-column"; headerText: string; atIndex?: number }
@@ -218,21 +226,45 @@ export class TableViewController {
       }
     };
 
+    const stampRow = (rowIndex: number, editedColIndex?: number) => {
+      const current = this.settingsService.getSettings();
+      return current.autoUpdateDatetime
+        ? applyAutoUpdateStamps(
+            tableData,
+            columns,
+            rowIndex,
+            current.datetimeFormat,
+            editedColIndex
+          )
+        : [];
+    };
+
     const headerAt = (colIndex: number): string => tableData.headers[colIndex] ?? "";
 
     const actions: TableViewActions = {
-      onCellUpdate: (rowIndex, colIndex, value) =>
-        commit(
+      onCellUpdate: (rowIndex, colIndex, value) => {
+        let stamped = false;
+        return commit(
           () => {
+            const changed = tableData.rows[rowIndex]?.cells[colIndex] !== value;
             applyCellUpdate(tableData, rowIndex, colIndex, value);
-            return { kind: "cell", rowIndex, colIndex, value };
+            const stamps = changed ? stampRow(rowIndex, colIndex) : [];
+            stamped = stamps.length > 0;
+            return { kind: "cell", rowIndex, colIndex, value, stamps };
           },
-          { refresh: false }
-        ),
+          // Stamped cells changed besides the one the caller redraws.
+          {
+            get refresh() {
+              return stamped;
+            },
+          }
+        );
+      },
 
       onAddRow: (atIndex, prefilledCells) =>
         commit(() => {
           const newRow = applyAddRow(tableData, columns.length, atIndex, prefilledCells);
+          stampRow(newRow.rowIndex);
           return { kind: "add-row", cells: newRow.cells, atIndex: newRow.rowIndex };
         }),
 
@@ -240,6 +272,7 @@ export class TableViewController {
         commit(() => {
           const duplicated = applyDuplicateRow(tableData, rowIndex);
           if (!duplicated) return null;
+          stampRow(duplicated.rowIndex);
           return {
             kind: "add-row",
             cells: duplicated.cells,
@@ -257,7 +290,9 @@ export class TableViewController {
         commit(() => {
           const effectiveDateFormat =
             dateFormat ?? this.settingsService.getSettings().dateFormat;
-          applyAddColumn(tableData, columns, name, type, atIndex, effectiveDateFormat);
+          applyAddColumn(tableData, columns, name, type, atIndex, effectiveDateFormat, {
+            format: this.settingsService.getSettings().datetimeFormat,
+          });
           const colIndex = atIndex ?? tableData.headers.length - 1;
           return { kind: "add-column", headerText: headerAt(colIndex), atIndex };
         }),
@@ -278,7 +313,14 @@ export class TableViewController {
         commit(() => {
           const effectiveDateFormat =
             dateFormat ?? this.settingsService.getSettings().dateFormat;
-          applyChangeColumnType(tableData, columns, colIndex, newType, effectiveDateFormat);
+          applyChangeColumnType(
+            tableData,
+            columns,
+            colIndex,
+            newType,
+            effectiveDateFormat,
+            this.settingsService.getSettings().datetimeFormat
+          );
           return {
             kind: "column-header",
             colIndex,
@@ -420,7 +462,8 @@ function createDocumentTransform(
           operation.colIndex,
           operation.value,
           previousHeaders,
-          tableIndex
+          tableIndex,
+          operation.stamps
         );
 
     case "add-row":

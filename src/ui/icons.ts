@@ -84,6 +84,12 @@ export const COLUMN_TYPE_DEFINITIONS: ColumnTypeDefinition[] = [
     icon: ICON_TYPE_DATE,
   },
   {
+    type: "datetime",
+    label: "Datetime",
+    desc: "Date and time, can track last change",
+    icon: ICON_TYPE_DATE,
+  },
+  {
     type: "checkbox",
     label: "Checkbox",
     desc: "Binary checkbox (yes/no, done)",
@@ -102,6 +108,7 @@ export function getColumnTypeIcon(type: ColumnType): string {
     case "checkbox":
       return ICON_TYPE_CHECKBOX;
     case "date":
+    case "datetime":
       return ICON_TYPE_DATE;
     case "text":
     default:

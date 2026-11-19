@@ -91,6 +91,17 @@ Drag a column's right edge in the interactive view and `w=` is written to the he
 * Pick dates in one click or navigate across months and years.
 * Supports common formats (`YYYY-MM-DD`, `DD.MM.YYYY`, `DD/MM/YYYY`, `MM/DD/YYYY`).
 
+### 🕒 Datetime & Last-Modified Columns
+A `[datetime]` column stores a date and/or time, and can record when a row was last changed.
+
+1. Mark a column with `[datetime]`, e.g. `Updated [datetime:YYYY-MM-DD HH:mm]`. Without a format the **Default datetime format** setting is used; when you pick the type in the UI the format is written to the header.
+2. Formats are built from the tokens `YYYY`, `MM` (month), `DD`, `HH` (24-hour, `hh` works too), `mm` (minutes) and `ss`. Use only part of them for a date-only (`YYYY-MM-DD`) or time-only (`HH:mm:ss`) column; the picker then shows just that part. Time is local, with no time zone.
+3. Add `autoupdate` to the header, e.g. `Updated [datetime:YYYY-MM-DD HH:mm,autoupdate,w=160]`, to have the column set to the current time whenever its row is saved. Several columns can carry it. Type it into the column name field of the header menu.
+4. Auto-update is on when **Auto-update last update datetime column** is enabled (default). It fires on cell edits (including checkboxes, tags and Kanban edits), new rows and duplicated rows. It does not fire on moving, deleting or re-sorting rows, or on column changes.
+5. An `autoupdate` column can still be edited by hand. That edit does not re-stamp the same column, but it does stamp the other `autoupdate` columns of the row. Saving an unchanged value changes nothing.
+6. Changes made outside Obsidian (another editor, sync tools, source mode on a device without this plugin) are not tracked, so their timestamps stay as they were.
+7. Changing the default format does not rewrite existing cells; a column keeps the format written in its header.
+
 ### 🔍 Search, Filter & Sort
 * **Live Search**: Type into the **Search** box on the toolbar to instantly filter rows across all columns.
 * **Visual Filters**: Click **Filter** to create rules with `AND` / `OR` logic (e.g. *Status is "In Progress" AND Due date is not empty*).
@@ -123,6 +134,8 @@ TableBase Plus automatically detects column types based on content, or you can e
 | `Tags [multi-select]` | Multi-Select | Multiple colored tag badges |
 | `Due [date]` | Date | Visual calendar picker (`YYYY-MM-DD`) |
 | `Due [date:DD.MM.YYYY]` | Date | Calendar picker with custom date format |
+| `Updated [datetime:YYYY-MM-DD HH:mm]` | Datetime | Date and/or time picker with a custom format |
+| `Updated [datetime:YYYY-MM-DD HH:mm,autoupdate]` | Datetime + auto-update | Set to the current time on every change of the row |
 | `Amount [number]` | Number | Strict numeric formatting (right-aligned) |
 | `Amount [number:sum]` | Number + Calc | Auto-calculates column Sum in footer |
 | `Done [checkbox]` | Checkbox | Centered interactive checkbox |
@@ -153,6 +166,7 @@ Tables taller than the **Maximum table height** (60% of the window height by def
 
 Configure under **Obsidian Settings → TableBase Plus**:
 * **Default Date Format**: Set preferred date display (`YYYY-MM-DD`, `DD.MM.YYYY`, etc.).
+* **Default Datetime Format** and **Auto-update last update datetime column**: see [Datetime & Last-Modified Columns](#-datetime--last-modified-columns).
 * **Default Tag Format**: Format tags as comma-separated, `#hashtags`, or `[[wikilinks]]`.
 * **Row Numbers**: Toggle row numbers globally.
 * **Default Column Width**: Width in pixels for columns without an explicit `w=` (default `240`).

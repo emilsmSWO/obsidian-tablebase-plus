@@ -618,4 +618,40 @@ describe("TablePostProcessor source parsing", () => {
     expect(cell?.textContent).toBe("важно");
   });
 
+
+  it("should give each table of a note its own id from its position in the text", () => {
+    const text = [
+      "| A | B |",
+      "| --- | --- |",
+      "| 1 | 2 |",
+      "",
+      "Between the tables",
+      "",
+      "| C | D |",
+      "| --- | --- |",
+      "| 3 | 4 |",
+    ].join("\n");
+    const spy = vi.spyOn(TableViewController.prototype, "createInlineTableView");
+
+    const first = createProcessor({ text, lineStart: 0, lineEnd: 2 });
+    first.processor.process(buildRenderedTable(["A", "B"], [["1", "2"]]), first.ctx);
+    const second = createProcessor({ text, lineStart: 6, lineEnd: 8 });
+    second.processor.process(buildRenderedTable(["C", "D"], [["3", "4"]]), second.ctx);
+
+    const ids = spy.mock.calls.map(([params]) => params.tableData.id);
+    expect(ids).toEqual(["tbl_Notes/Test.md_0", "tbl_Notes/Test.md_1"]);
+    spy.mockRestore();
+  });
+
+  it("should tell tables apart by their headers when the note text is unavailable", () => {
+    const spy = vi.spyOn(TableViewController.prototype, "createInlineTableView");
+    const { processor, ctx } = createProcessor();
+
+    processor.process(buildRenderedTable(["A"], [["1"]]), ctx);
+    processor.process(buildRenderedTable(["B"], [["2"]]), ctx);
+
+    const [first, second] = spy.mock.calls.map(([params]) => params.tableData.id);
+    expect(first).not.toBe(second);
+    spy.mockRestore();
+  });
 });

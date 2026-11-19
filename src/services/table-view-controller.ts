@@ -431,8 +431,12 @@ export class TableViewController {
         return Promise.resolve();
       },
 
-      onColumnDictionaryChange: (colIndex, dictionary) =>
+      onColumnDictionaryChange: (colIndex, dictionary, type) =>
         commit(() => {
+          if (type && columns[colIndex]?.type !== type) {
+            const settings = this.settingsService.getSettings();
+            applyChangeColumnType(tableData, columns, colIndex, type, settings.dateFormat, settings.datetimeFormat);
+          }
           applyChangeColumnDictionary(tableData, columns, colIndex, dictionary);
           this.rebuildLists(tableData, columns);
           return { kind: "column-header", colIndex, headerText: headerAt(colIndex) };

@@ -1885,7 +1885,7 @@ input[type="text"].ms-col-menu-name-input {
   font-size: 0.9em;
   font-weight: 600;
   color: var(--text-normal);
-  background: var(--background-secondary, rgba(0, 0, 0, 0.03));
+  background: var(--background-primary);
   border: 1px solid var(--ms-border);
   border-radius: 5px;
   padding: 4px 8px;
@@ -1965,6 +1965,31 @@ input[type="text"].ms-col-menu-name-input:focus {
   letter-spacing: 0.5px;
   color: var(--ms-text-muted);
   padding: 2px 8px;
+}
+
+.ms-menu-chevron {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--ms-text-muted);
+  transition: transform 0.12s ease;
+}
+
+.ms-check + .ms-menu-chevron {
+  margin-left: 4px;
+}
+
+.ms-menu-item.is-expanded .ms-menu-chevron {
+  transform: rotate(90deg);
+}
+
+.ms-menu-submenu {
+  margin-left: 14px;
+  padding-left: 6px;
+  border-left: 1px solid var(--ms-border);
+}
+
+.ms-menu-submenu.is-hidden {
+  display: none;
 }
 
 .ms-date-picker-popover {

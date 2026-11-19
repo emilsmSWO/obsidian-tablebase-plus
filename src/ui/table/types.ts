@@ -42,8 +42,16 @@ export interface TableViewActions {
   onFilterChange(state: TableFilterState): void;
   onSortChange(sortRules: SortRule[]): void;
   onTagColorChange(tagName: string, color: TagColor): Promise<void>;
-  /** Binds a select column to a dictionary, or to a custom list when `dictionary` is undefined. */
-  onColumnDictionaryChange?(this: void, colIndex: number, dictionary: string | undefined): Promise<void>;
+  /**
+   * Binds a select column to a dictionary, or to a custom list when `dictionary` is undefined.
+   * With `type` the column also becomes that list type, in the same change.
+   */
+  onColumnDictionaryChange?(
+    this: void,
+    colIndex: number,
+    dictionary: string | undefined,
+    type?: "select" | "multi-select"
+  ): Promise<void>;
   /** Rebuilds the option order of a select or multi-select column from the table. */
   onReloadList?(this: void, colIndex: number): Promise<void>;
   onColumnResize?(this: void, colIndex: number, width: number): Promise<void>;

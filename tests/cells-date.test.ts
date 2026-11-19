@@ -41,6 +41,7 @@ function createActions(): TableViewActions {
     onDeleteColumn: vi.fn(noop),
     onColumnTypeChange: vi.fn(noop),
     onColumnDateFormatChange: vi.fn(noop),
+    onColumnAutoUpdateChange: vi.fn(noop),
     onColumnAlignmentChange: vi.fn(noop),
     onColumnCalculationChange: vi.fn(noop),
     onReorderColumns: vi.fn(noop),

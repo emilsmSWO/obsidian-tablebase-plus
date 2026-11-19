@@ -3,10 +3,9 @@ import { clampColumnWidth, DEFAULT_COLUMN_WIDTH, MAX_COLUMN_WIDTH, MIN_COLUMN_WI
 import { DATE_FORMAT_OPTIONS } from "../core/date-utils";
 import { DATETIME_FORMAT_OPTIONS } from "../core/datetime-utils";
 import { SettingsService } from "../services/settings-service";
-import { DateFormatOption, DEFAULT_SETTINGS, TagColor, TagFormat } from "../types";
-import { createColorPickerElement } from "./color-picker";
+import { DateFormatOption, DEFAULT_SETTINGS, TagFormat } from "../types";
 import { renderDictionariesEditor } from "./dictionaries-editor";
-import { createTagBadge } from "./tag-badge";
+import { renderGlobalTagColorsEditor } from "./global-tag-colors-editor";
 
 const MAX_HEIGHT_DESC =
   "Tables taller than this share of the window height scroll inside it, with the header kept in view. Set 0 for no limit.";
@@ -30,6 +29,9 @@ const AUTO_UPDATE_DESC =
 
 const DICTIONARIES_DESC =
   "Named lists of select and multi-select options with colors. Bind a column to one in its header menu (List source) or with [select:dict=Name].";
+
+const GLOBAL_TAG_COLORS_DESC =
+  "Colors for tag names across all tables and boards. A dictionary color overrides them; tags without a color get an automatic one.";
 
 const COLUMN_WIDTH_DESC =
   "Width in pixels of columns that have no width of their own. Drag a column edge to set one; it is saved in the header as [text:w=300].";
@@ -179,8 +181,15 @@ export class TableBaseSettingTab extends PluginSettingTab {
         },
       },
       {
-        name: "Custom tag colors",
-        desc: "Customize colors for specific tags. These override automatic colors across all tables and boards.",
+        name: "Global tag colors",
+        desc: GLOBAL_TAG_COLORS_DESC,
+        render: (setting) => {
+          setting.setName("Global tag colors").setDesc(GLOBAL_TAG_COLORS_DESC);
+          setting.settingEl.addClass("ms-dict-setting");
+          const host = setting.settingEl.createDiv({ cls: "ms-dict-editor" });
+          renderGlobalTagColorsEditor(host, this.settingsService);
+          return () => host.remove();
+        },
       },
       {
         name: "Restore default settings",
@@ -251,7 +260,7 @@ export class TableBaseSettingTab extends PluginSettingTab {
     this.renderFormatting(containerEl);
     this.renderAppearance(containerEl);
     this.renderDictionaries(containerEl);
-    this.renderCustomTagColors(containerEl);
+    this.renderGlobalTagColors(containerEl);
     this.renderReset(containerEl);
   }
 
@@ -464,101 +473,10 @@ export class TableBaseSettingTab extends PluginSettingTab {
     );
   }
 
-  private renderCustomTagColors(containerEl: HTMLElement): void {
-    const settings = this.settingsService.getSettings();
-    this.addHeading(containerEl, "Custom tag colors");
-
-    containerEl.createEl("p", {
-      cls: "setting-item-description",
-      text: "Customize colors for specific tags. These override automatic colors across all tables and boards.",
-    });
-
-    const customColors = settings.customTagColors ?? {};
-    const tagEntries = Object.entries(customColors);
-    const colorsContainer = containerEl.createDiv({ cls: "ms-settings-tag-colors-list" });
-
-    if (tagEntries.length === 0) {
-      colorsContainer.createDiv({
-        cls: "ms-settings-empty-notice",
-        text: "No custom tag colors configured yet. Choose colors directly from table or board dropdowns, or add one below.",
-      });
-    } else {
-      for (const [tagKey, colorValue] of tagEntries) {
-        this.renderTagColorRow(colorsContainer, tagKey, colorValue);
-      }
-    }
-
-    this.renderAddTagColor(containerEl);
-  }
-
-  private renderTagColorRow(
-    container: HTMLElement,
-    tagKey: string,
-    colorValue: TagColor
-  ): void {
-    const setting = new Setting(container);
-
-    setting.nameEl.appendChild(
-      createTagBadge({
-        tag: { id: tagKey, name: tagKey, color: colorValue },
-        clickable: false,
-      })
-    );
-
-    setting.controlEl.appendChild(
-      createColorPickerElement({
-        currentColor: colorValue,
-        onSelectColor: async (newColor) => {
-          await this.settingsService.setTagColor(tagKey, newColor);
-          this.refresh();
-        },
-      })
-    );
-
-    setting.addExtraButton((btn) =>
-      btn
-        .setIcon("trash")
-        .setTooltip("Reset to automatic color")
-        .onClick(async () => {
-          await this.settingsService.removeTagColor(tagKey);
-          this.refresh();
-        })
-    );
-  }
-
-  private renderAddTagColor(containerEl: HTMLElement): void {
-    let newTagName = "";
-    let newTagColor: TagColor = "blue";
-
-    const setting = new Setting(containerEl)
-      .setName("Add custom tag color")
-      .setDesc("Assign a preset palette color or custom hex color to a tag name.")
-      .addText((text) =>
-        text.setPlaceholder("e.g. In Progress, High, Bug...").onChange((value) => {
-          newTagName = value;
-        })
-      );
-
-    setting.controlEl.appendChild(
-      createColorPickerElement({
-        currentColor: newTagColor,
-        onSelectColor: (color) => {
-          newTagColor = color;
-        },
-      })
-    );
-
-    setting.addButton((btn) =>
-      btn
-        .setButtonText("Add")
-        .setCta()
-        .onClick(async () => {
-          const trimmed = newTagName.trim();
-          if (!trimmed) return;
-          await this.settingsService.setTagColor(trimmed, newTagColor);
-          this.refresh();
-        })
-    );
+  private renderGlobalTagColors(containerEl: HTMLElement): void {
+    this.addHeading(containerEl, "Global tag colors");
+    containerEl.createEl("p", { cls: "setting-item-description", text: GLOBAL_TAG_COLORS_DESC });
+    renderGlobalTagColorsEditor(containerEl.createDiv({ cls: "ms-dict-editor" }), this.settingsService);
   }
 
   private renderReset(containerEl: HTMLElement): void {

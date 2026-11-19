@@ -205,7 +205,7 @@ Configure under **Obsidian Settings → TableBase Plus**:
 * **Calculation Row**: Show or hide the bottom summary row.
 * **Empty Board Properties**: Show placeholders (`+ Property`) for empty fields on Kanban cards.
 * **Dictionaries**: Named option lists with colors for select and multi-select columns, see [Dictionaries](#5-dictionaries-dict).
-* **Custom Tag Colors**: Assign permanent colors to specific tags across your vault.
+* **Global Tag Colors**: Add tags with a color (and remove or recolor them) to give them the same color across your vault. A dictionary color wins over a global one; tags without either get an automatic color.
 
 ---
 

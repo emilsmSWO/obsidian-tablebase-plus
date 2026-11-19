@@ -2755,3 +2755,4 @@ input[type="text"].ms-modal-name-input.is-invalid {
 .ms-dict-new {
   margin-top: 10px;
 }
+.ms-gtc-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }

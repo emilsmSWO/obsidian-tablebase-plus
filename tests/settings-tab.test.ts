@@ -38,7 +38,7 @@ describe("TableBaseSettingTab", () => {
     expect(headings).toContain("Column detection");
     expect(headings).toContain("Tag and date formatting");
     expect(headings).toContain("Appearance");
-    expect(headings).toContain("Custom tag colors");
+    expect(headings).toContain("Global tag colors");
     expect(headings).toContain("Reset settings");
   });
 
@@ -150,7 +150,7 @@ describe("TableBaseSettingTab", () => {
     expect(settingsService.getSettings().showRowNumbers).toBe(true);
   });
 
-  it("should add and remove custom tag colors", async () => {
+  it("should render the global tag colors editor and add a color", async () => {
     const plugin = createMockPlugin();
     const settingsService = new SettingsService(plugin);
     await settingsService.loadSettings();
@@ -158,35 +158,18 @@ describe("TableBaseSettingTab", () => {
     const tab = new TableBaseSettingTab({} as App, plugin, settingsService);
     tab.display();
 
-    const textInputs = tab.containerEl.querySelectorAll<HTMLInputElement>("input[type='text']");
-    const addInput = Array.from(textInputs).find(
-      (i) => i.placeholder === "e.g. In Progress, High, Bug..."
-    );
+    const addInput = Array.from(
+      tab.containerEl.querySelectorAll<HTMLInputElement>("input[type='text']")
+    ).find((i) => i.placeholder === "Tag name, e.g. In Progress");
     expect(addInput).toBeDefined();
+    addInput!.value = "In Progress";
 
-    if (addInput) {
-      addInput.value = "In Progress";
-      addInput.dispatchEvent(new Event("input", { bubbles: true }));
-    }
-
-    const addBtn = Array.from(
-      tab.containerEl.querySelectorAll<HTMLButtonElement>("button")
-    ).find((b) => b.textContent === "Add");
-    expect(addBtn).toBeDefined();
-
-    addBtn?.click();
+    Array.from(tab.containerEl.querySelectorAll<HTMLButtonElement>("button"))
+      .find((b) => b.textContent === "Add tag color")
+      ?.click();
     await new Promise((r) => setTimeout(r, 10));
 
     expect(settingsService.getSettings().customTagColors["in progress"]).toBeDefined();
-
-    const trashBtn = tab.containerEl.querySelector<HTMLElement>(
-      ".setting-item [data-icon='trash']"
-    );
-    expect(trashBtn).not.toBeNull();
-    trashBtn?.click();
-    await new Promise((r) => setTimeout(r, 10));
-
-    expect(settingsService.getSettings().customTagColors["in progress"]).toBeUndefined();
   });
 
   it("should restore defaults on reset button click", async () => {

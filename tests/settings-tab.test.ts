@@ -210,4 +210,27 @@ describe("TableBaseSettingTab", () => {
     input!.dispatchEvent(new Event("input"));
     expect(settingsService.getSettings().defaultColumnWidth).toBe(60);
   });
+
+  it("should default the maximum table height to 60% and clamp the stored value", async () => {
+    const plugin = createMockPlugin();
+    const settingsService = new SettingsService(plugin);
+    await settingsService.loadSettings();
+    expect(settingsService.getSettings().maxTableHeight).toBe(60);
+
+    const tab = new TableBaseSettingTab({} as App, plugin, settingsService);
+    tab.display();
+
+    const input = Array.from(
+      tab.containerEl.querySelectorAll<HTMLInputElement>('input[type="number"]')
+    ).find((el) => el.max === "100");
+    expect(input?.value).toBe("60");
+
+    input!.value = "0";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().maxTableHeight).toBe(0);
+
+    input!.value = "250";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().maxTableHeight).toBe(100);
+  });
 });

@@ -71,6 +71,10 @@ export class TableGrid {
 
     const { settings } = this.ctx;
     const showRowNumbers = this.ctx.isRowNumbersVisible();
+    const maxHeight = settings.maxTableHeight;
+    if (typeof maxHeight === "number" && maxHeight > 0) {
+      scrollWrapper.style.maxHeight = `${Math.min(maxHeight, 100)}vh`;
+    }
 
     const tableEl = scrollWrapper.createEl("table", {
       cls: [

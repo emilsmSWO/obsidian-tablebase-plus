@@ -170,6 +170,8 @@ export interface PluginSettings {
   showRowNumbers: boolean;
   showEmptyBoardProperties: boolean;
   defaultColumnWidth: number;
+  /** Percent of the window height a table may grow to before it scrolls; 0 means no limit. */
+  maxTableHeight: number;
   tableBoardGroupOrders: Record<string, Record<string, string[]>>;
 }
 
@@ -192,6 +194,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   showRowNumbers: false,
   showEmptyBoardProperties: false,
   defaultColumnWidth: 240,
+  maxTableHeight: 60,
   tableBoardGroupOrders: {},
 };
 

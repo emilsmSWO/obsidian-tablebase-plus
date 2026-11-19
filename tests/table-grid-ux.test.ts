@@ -245,6 +245,21 @@ describe("Table grid UX", () => {
     expect(ctx.containerEl.querySelector<HTMLElement>("table.ms-db-grid-table")?.style.width).toBe("728px");
   });
 
+  it("should cap the height of the scroll area by the setting, and not cap it at 0", () => {
+    const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
+    const wrapper = (): HTMLElement | null =>
+      ctx.containerEl.querySelector<HTMLElement>(".ms-db-table-scroll-wrapper");
+
+    ctx.settings.maxTableHeight = 45;
+    grid.render(ctx.containerEl);
+    expect(wrapper()?.style.maxHeight).toBe("45vh");
+
+    ctx.containerEl.empty();
+    ctx.settings.maxTableHeight = 0;
+    grid.render(ctx.containerEl);
+    expect(wrapper()?.style.maxHeight).toBe("");
+  });
+
   it("should resize only the selected column and report its new width on release", () => {
     const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
     const onColumnResize = vi.fn(async () => undefined);

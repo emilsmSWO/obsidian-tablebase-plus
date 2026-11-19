@@ -261,4 +261,50 @@ describe("dictionary-bound popover and controller", () => {
     expect(view.columns[1].dictionaryColors).toBeUndefined();
     expect(view.columns[1].uniqueTags?.map((tag) => tag.name)).toEqual(["Gone", "Todo"]);
   });
+
+  it("turns a column into a dictionary-bound select in one change and offers it in the type menu", async () => {
+    document.body.innerHTML = "";
+    const service = new SettingsService({
+      loadData: async () => ({ ...DEFAULT_SETTINGS, dictionaries: [statuses] }),
+      saveData: async () => undefined,
+    });
+    await service.loadSettings();
+    const syncService = new TableSyncService({
+      modifyFile: vi.fn(async () => true),
+    } as unknown as VaultService);
+    vi.spyOn(syncService, "syncInlineTable").mockResolvedValue(undefined);
+    const controller = new TableViewController({} as App, service, new TableStateManager(), syncService);
+
+    const data = table("Status [text]", "Todo", "Done");
+    const view = controller.createInlineTableView({
+      sourcePath: "n.md",
+      tableData: data,
+      startLine: 0,
+      tableIndex: 0,
+    });
+    document.body.appendChild(view.getElement());
+    const th = view.getElement().querySelector<HTMLElement>('th.ms-db-th[data-col-index="1"]')!;
+    const rect = { top: 40, bottom: 74, left: 200, right: 340, width: 140, height: 34, x: 200, y: 40 };
+    th.getBoundingClientRect = () => ({ ...rect, toJSON: () => rect }) as DOMRect;
+    th.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+
+    const items = () =>
+      Array.from(document.querySelectorAll<HTMLElement>(".ms-col-header-menu .ms-menu-item"));
+    const pick = (label: string, nth = 0) =>
+      items().filter((el) => el.textContent?.trim() === label)[nth];
+    const submenu = pick("Select").nextElementSibling as HTMLElement;
+    expect(submenu.classList.contains("is-hidden")).toBe(true);
+    pick("Select").click();
+    expect(submenu.classList.contains("is-hidden")).toBe(false);
+    expect(Array.from(submenu.querySelectorAll(".ms-menu-item")).map((el) => el.textContent?.trim())).toEqual([
+      "Custom (values from the table)",
+      "Statusy",
+    ]);
+    (submenu.querySelectorAll(".ms-menu-item")[1] as HTMLElement).click();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(data.headers[1]).toBe("Status [select:dict=Statusy]");
+    expect(view.columns[1].type).toBe("select");
+    expect(view.columns[1].uniqueTags?.map((tag) => tag.name)).toEqual(["Todo", "Done"]);
+  });
 });

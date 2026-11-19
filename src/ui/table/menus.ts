@@ -14,6 +14,7 @@ import {
   ICON_ARROW_RIGHT,
   ICON_ARROW_UP,
   ICON_CHECK,
+  ICON_CHEVRON_RIGHT,
   ICON_CLEAR,
   ICON_COPY,
   ICON_DOWNLOAD,
@@ -22,7 +23,6 @@ import {
   ICON_EYE_OFF,
   ICON_TRASH,
   ICON_TYPE_NUMBER,
-  ICON_TYPE_SELECT,
 } from "../icons";
 import { confirmAction } from "../modals/confirm-modal";
 import { RenameColumnModal } from "../modals/rename-column-modal";
@@ -471,7 +471,6 @@ export class TableMenus {
     }
     menu.createDiv({ cls: "ms-menu-divider" });
     this.appendColumnTypeSection(menu, column, columnIndex);
-    this.appendListSourceSection(menu, column, columnIndex);
     menu.createDiv({ cls: "ms-menu-divider" });
 
     addMenuItem(menu, ICON_ARROW_LEFT, "Insert left", () =>
@@ -565,6 +564,7 @@ export class TableMenus {
   ): void {
     const section = menu.createDiv({ cls: "ms-menu-section" });
     section.createDiv({ cls: "ms-menu-section-title", text: "Property Type" });
+    const dictionaries = this.ctx.settings.dictionaries ?? [];
 
     for (const definition of COLUMN_TYPE_DEFINITIONS) {
       const isDatetime = definition.type === "datetime";
@@ -572,6 +572,11 @@ export class TableMenus {
       const isSelected = isDatetime
         ? column.type === "datetime" && !isAuto
         : column.type === definition.type;
+      const isList = definition.type === "select" || definition.type === "multi-select";
+      if (isList && dictionaries.length > 0 && this.ctx.actions.onColumnDictionaryChange) {
+        this.appendListTypeItem(section, menu, column, columnIndex, definition, isSelected);
+        continue;
+      }
       addCheckableItem(section, definition.icon, definition.label, isSelected, () => {
         if (isDatetime && isAuto) {
           void this.ctx.actions.onColumnAutoUpdateChange(columnIndex, false);
@@ -591,35 +596,45 @@ export class TableMenus {
     }
   }
 
-  /** "List source": the column's own values (custom) or one of the dictionaries from the settings. */
-  private appendListSourceSection(
+  /**
+   * Select and Multi-select open a nested list: Custom (values from the table) or a dictionary.
+   * It is expanded inline because the menu scrolls and would clip a flyout.
+   */
+  private appendListTypeItem(
+    section: HTMLElement,
     menu: HTMLElement,
     column: TableColumn,
-    columnIndex: number
+    columnIndex: number,
+    definition: (typeof COLUMN_TYPE_DEFINITIONS)[number],
+    isCurrentType: boolean
   ): void {
-    const dictionaries = this.ctx.settings.dictionaries ?? [];
     const change = this.ctx.actions.onColumnDictionaryChange;
-    if (!change || dictionaries.length === 0) return;
-    if (column.type !== "select" && column.type !== "multi-select") return;
+    if (!change) return;
+    const bound = isCurrentType && column.dictionaryColors ? column.dictionary?.toLowerCase() : undefined;
 
-    const section = menu.createDiv({ cls: "ms-menu-section" });
-    section.createDiv({ cls: "ms-menu-section-title", text: "List source" });
-    const bound = column.dictionaryColors ? column.dictionary?.toLowerCase() : undefined;
-
-    addCheckableItem(section, ICON_TYPE_SELECT, "Custom (values from the table)", !bound, () => {
-      void change(columnIndex, undefined);
-      menu.remove();
+    const parent = addCheckableItem(section, definition.icon, definition.label, isCurrentType, () => {
+      const open = !sub.classList.contains("is-hidden");
+      sub.classList.toggle("is-hidden", open);
+      parent.classList.toggle("is-expanded", !open);
     });
-    for (const dictionary of dictionaries) {
+    appendIcon(parent.createSpan({ cls: "ms-menu-chevron" }), ICON_CHEVRON_RIGHT);
+
+    const sub = section.createDiv({ cls: `ms-menu-submenu${isCurrentType ? "" : " is-hidden"}` });
+    parent.classList.toggle("is-expanded", isCurrentType);
+    const choose = (dictionary: string | undefined): void => {
+      void change(columnIndex, dictionary, definition.type as "select" | "multi-select");
+      menu.remove();
+    };
+    addCheckableItem(sub, definition.icon, "Custom (values from the table)", isCurrentType && !bound, () =>
+      choose(undefined)
+    );
+    for (const dictionary of this.ctx.settings.dictionaries ?? []) {
       addCheckableItem(
-        section,
-        ICON_TYPE_SELECT,
+        sub,
+        definition.icon,
         dictionary.name,
         bound === dictionary.name.toLowerCase(),
-        () => {
-          void change(columnIndex, dictionary.name);
-          menu.remove();
-        }
+        () => choose(dictionary.name)
       );
     }
   }

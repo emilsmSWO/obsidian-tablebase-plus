@@ -80,7 +80,7 @@ A dictionary is a named, ordered list of options with colors, defined once in th
 
 1. Create dictionaries under **Settings → TableBase Plus → Dictionaries**: add items, pick a color per item, reorder with the arrows, then press **Save** (or **Revert** to drop the edit). A dictionary cannot be renamed; use **Clone** to copy it under a new name.
 2. Names are unique ignoring case and cannot contain `, [ ] =`. Item names are unique within a dictionary and cannot contain `, ;`.
-3. In the column header menu, **List source** switches a column between **Custom** (options come from the values in the table) and any dictionary.
+3. In the column header menu, **Property Type → Select** or **Multi-select** opens a nested list: **Custom** (options come from the values in the table) or any dictionary. The column type and the dictionary change together.
 4. In a bound column only dictionary items can be picked, in the dictionary order and with the dictionary colors. A color comes from the dictionary, else from the global tag color, else it is automatic.
 5. Values in the table that are not in the dictionary are shown in red and bold; the Markdown is not changed. The Kanban board shows one group per dictionary item, plus a group for each such value.
 6. Deleting a dictionary turns its columns back into custom lists.

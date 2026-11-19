@@ -598,7 +598,7 @@ input[type="text"].ms-filter-value-input:focus {
 }
 
 .ms-db-table-scroll-wrapper {
-  overflow-x: auto;
+  overflow: auto;
   width: 100%;
   position: relative;
   box-sizing: border-box;
@@ -851,6 +851,18 @@ input[type="text"].ms-filter-value-input:focus {
 
 .ms-db-grid-table thead tr {
   height: 34px;
+}
+
+/* With a height limit the table scrolls inside its wrapper, so the header stays in view. */
+.ms-db-grid-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--background-primary);
+}
+
+.ms-db-grid-table.has-row-numbers thead th.ms-db-th-index {
+  z-index: 40;
 }
 
 .ms-db-grid-table thead th {

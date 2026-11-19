@@ -126,6 +126,8 @@ TableBase automatically detects column types based on content, or you can explic
 
 Columns without `w=` use the **Default column width** (240 px). Drag a column's right edge to resize it; the width is written to the header, so it stays with the note and long text wraps inside the column.
 
+Tables taller than the **Maximum table height** (60% of the window height by default, 0 for no limit) scroll inside their own area with a sticky header, so the horizontal scrollbar stays on screen. Shorter tables keep their natural height.
+
 ---
 
 ## ⌨️ Keyboard Shortcuts

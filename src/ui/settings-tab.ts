@@ -2,9 +2,16 @@ import { App, Plugin, PluginSettingTab, Setting, SettingDefinitionItem } from "o
 import { clampColumnWidth, DEFAULT_COLUMN_WIDTH, MAX_COLUMN_WIDTH, MIN_COLUMN_WIDTH } from "../core/column-width";
 import { DATE_FORMAT_OPTIONS } from "../core/date-utils";
 import { SettingsService } from "../services/settings-service";
-import { DateFormatOption, TagColor, TagFormat } from "../types";
+import { DateFormatOption, DEFAULT_SETTINGS, TagColor, TagFormat } from "../types";
 import { createColorPickerElement } from "./color-picker";
 import { createTagBadge } from "./tag-badge";
+
+const MAX_HEIGHT_DESC =
+  "Tables taller than this share of the window height scroll inside it, with the header kept in view. Set 0 for no limit.";
+
+function clampMaxTableHeight(percent: number): number {
+  return Math.min(100, Math.max(0, Math.round(percent)));
+}
 
 const COLUMN_WIDTH_DESC =
   "Width in pixels of columns that have no width of their own. Drag a column edge to set one; it is saved in the header as [text:w=300].";
@@ -91,6 +98,17 @@ export class TableBaseSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: "Maximum table height",
+        desc: MAX_HEIGHT_DESC,
+        control: {
+          type: "number",
+          key: "maxTableHeight",
+          min: 0,
+          max: 100,
+          placeholder: String(DEFAULT_SETTINGS.maxTableHeight),
+        },
+      },
+      {
         name: "Show empty properties on board cards",
         desc: "Display placeholders for empty fields on Kanban cards so they can be filled in. Checkboxes are always shown.",
         control: {
@@ -139,6 +157,12 @@ export class TableBaseSettingTab extends PluginSettingTab {
       const width = typeof value === "number" ? value : Number(value);
       if (!Number.isFinite(width)) return;
       await this.settingsService.updateSettings({ defaultColumnWidth: clampColumnWidth(width) });
+      return;
+    }
+    if (key === "maxTableHeight") {
+      const percent = typeof value === "number" ? value : Number(value);
+      if (!Number.isFinite(percent)) return;
+      await this.settingsService.updateSettings({ maxTableHeight: clampMaxTableHeight(percent) });
       return;
     }
     await this.settingsService.updateSettings({ [key]: value });
@@ -288,6 +312,25 @@ export class TableBaseSettingTab extends PluginSettingTab {
             String(this.settingsService.getSettings().defaultColumnWidth ?? DEFAULT_COLUMN_WIDTH)
           );
         });
+      });
+
+    new Setting(containerEl)
+      .setName("Maximum table height")
+      .setDesc(MAX_HEIGHT_DESC)
+      .addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.min = "0";
+        text.inputEl.max = "100";
+        text
+          .setPlaceholder(String(DEFAULT_SETTINGS.maxTableHeight))
+          .setValue(String(settings.maxTableHeight ?? DEFAULT_SETTINGS.maxTableHeight))
+          .onChange(async (value) => {
+            const percent = Number(value);
+            if (value.trim() === "" || !Number.isFinite(percent)) return;
+            await this.settingsService.updateSettings({
+              maxTableHeight: clampMaxTableHeight(percent),
+            });
+          });
       });
 
     new Setting(containerEl)

@@ -34,6 +34,7 @@ export interface TableViewActions {
     newType: ColumnType,
     dateFormat?: DateFormatOption
   ): Promise<void>;
+  onColumnAutoUpdateChange(colIndex: number, enabled: boolean): Promise<void>;
   onColumnDateFormatChange(colIndex: number, newDateFormat: DateFormatOption): Promise<void>;
   onColumnAlignmentChange(colIndex: number, alignment: ColumnAlignment): Promise<void>;
   onColumnCalculationChange(colIndex: number, calculation: CalculationType): Promise<void>;

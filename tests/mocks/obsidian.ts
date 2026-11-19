@@ -52,6 +52,12 @@ export class MarkdownRenderChild extends Component {
   }
 }
 
+export const Keymap = {
+  isModEvent(e: { ctrlKey?: boolean; metaKey?: boolean; button?: number }): boolean | "tab" {
+    return e.ctrlKey || e.metaKey || e.button === 1 ? "tab" : false;
+  },
+};
+
 export class Plugin extends Component {
   app: unknown;
   manifest: unknown;
@@ -64,6 +70,7 @@ export class Plugin extends Component {
     return null;
   }
   async saveData(_data: unknown): Promise<void> {}
+  registerHoverLinkSource(_id: string, _info: unknown): void {}
   addCommand(command: unknown): unknown {
     return command;
   }

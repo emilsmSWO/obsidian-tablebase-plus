@@ -210,4 +210,56 @@ describe("link-renderer", () => {
     expect(container.querySelector("code")).toBeNull();
     expect(container.textContent).toBe("Run = this.file.name now");
   });
+
+  it("should treat Markdown link destinations as vault paths unless they have a safe scheme", () => {
+    expect(parseLinkTokens("[a](Notes/Note.md)")).toEqual([
+      { type: "internal", text: "a", href: "Notes/Note.md" },
+    ]);
+    expect(parseLinkTokens("[a](#Heading)")).toEqual([
+      { type: "internal", text: "a", href: "#Heading" },
+    ]);
+    expect(parseLinkTokens("[a](<My Note.md>)")).toEqual([
+      { type: "internal", text: "a", href: "My Note.md" },
+    ]);
+    expect(parseLinkTokens("[a](My%20Note.md)")).toEqual([
+      { type: "internal", text: "a", href: "My Note.md" },
+    ]);
+    expect(parseLinkTokens('[a](https://x.org/a_(b) "title")')).toEqual([
+      { type: "external", text: "a", href: "https://x.org/a_(b)" },
+    ]);
+    expect(parseLinkTokens("[a](obsidian://open?vault=v)")[0]).toMatchObject({ type: "external" });
+    expect(parseLinkTokens("[a](mailto:me@x.org)")[0]).toMatchObject({ type: "external" });
+    expect(parseLinkTokens("[a](javascript:alert(1))")).toEqual([
+      { type: "text", text: "[a](javascript:alert(1))" },
+    ]);
+  });
+
+  it("should accept the escaped pipe that Obsidian needs for an alias inside a table", () => {
+    expect(parseLinkTokens("[[Page\\|alias]] and [[Page#Sec|a]]")).toEqual([
+      { type: "internal", text: "alias", href: "Page" },
+      { type: "text", text: " and " },
+      { type: "internal", text: "a", href: "Page#Sec" },
+    ]);
+  });
+
+  it("should show an embed as a link to its target", () => {
+    expect(parseLinkTokens("![[Image.png]]")).toEqual([
+      { type: "internal", text: "Image.png", href: "Image.png" },
+    ]);
+    expect(toPlainText("**x** ![[Note]]")).toBe("**x** Note");
+  });
+
+  it("should mark unresolved internal links and report hover", () => {
+    const container = document.createElement("div");
+    const onInternalHover = vi.fn();
+    renderTextWithLinks(container, "[[Exists]] [[Missing]]", {
+      isInternalResolved: (path) => path === "Exists",
+      onInternalHover,
+    });
+    const links = container.querySelectorAll<HTMLElement>("a.internal-link");
+    expect(links[0].classList.contains("is-unresolved")).toBe(false);
+    expect(links[1].classList.contains("is-unresolved")).toBe(true);
+    links[1].dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+    expect(onInternalHover).toHaveBeenCalledWith("Missing", expect.any(MouseEvent), links[1]);
+  });
 });

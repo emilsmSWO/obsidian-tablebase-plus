@@ -654,4 +654,34 @@ describe("TablePostProcessor source parsing", () => {
     expect(first).not.toBe(second);
     spy.mockRestore();
   });
+
+  it("should keep links that sit next to formatting in a reading-view cell", () => {
+    const { processor, ctx } = createProcessor();
+    const wrapper = buildRenderedTable(["Name"], [["x"]]);
+    wrapper.querySelector("td")!.innerHTML =
+      '<strong>Bold</strong> <a class="internal-link" data-href="Notes/Other#Sec" href="Notes/Other#Sec">See</a> ' +
+      '<a class="external-link" href="https://obsidian.md">site</a>';
+
+    processor.process(wrapper, ctx);
+
+    const internal = wrapper.querySelector<HTMLAnchorElement>(".ms-db-td a.internal-link");
+    expect(internal?.dataset.href).toBe("Notes/Other#Sec");
+    expect(internal?.textContent).toBe("See");
+    const external = wrapper.querySelector<HTMLAnchorElement>(".ms-db-td a.external-link");
+    expect(external?.getAttribute("href")).toBe("https://obsidian.md");
+  });
+
+  it("should prefer the source cell when its visible text matches the rendered one", () => {
+    const text = ["| Name |", "| --- |", "| [[Page\\|Shown]] |"].join("\n");
+    const { processor, ctx } = createProcessor({ text, lineStart: 0, lineEnd: 2 });
+    const wrapper = buildRenderedTable(["Name"], [["x"]]);
+    wrapper.querySelector("td")!.innerHTML =
+      '<a class="internal-link" data-href="Page" href="Page">Shown</a>';
+
+    processor.process(wrapper, ctx);
+
+    const link = wrapper.querySelector<HTMLAnchorElement>(".ms-db-td a.internal-link");
+    expect(link?.dataset.href).toBe("Page");
+    expect(link?.textContent).toBe("Shown");
+  });
 });

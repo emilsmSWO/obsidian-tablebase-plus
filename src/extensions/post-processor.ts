@@ -2,6 +2,7 @@ import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidi
 import { findTargetTable, parseMarkdownTables } from "../core/markdown-parser";
 import { createFallbackTableId, createTableId, findTableOrdinal } from "../core/table-id";
 import { stripTypeAnnotation } from "../core/table-mutator";
+import { cellElementToMarkdown } from "./cell-markdown";
 import { toPlainText } from "../utils/link-renderer";
 import { TableViewController } from "../services/table-view-controller";
 import { TableViewRegistry } from "../services/table-view-registry";
@@ -96,9 +97,9 @@ export class TablePostProcessor {
   }
 
   /**
-   * The renderer turns "[[Page]]" into bare text, which would leave the grid
-   * with a dead link. Where the rendered text is exactly the flattened source
-   * cell, the source wins; anything else (bold, italics) keeps what was
+   * Rendered cells are read back as Markdown with their links intact. Where
+   * that has the same visible text as the source cell, the source wins (it
+   * keeps the exact link syntax); anything else (bold, italics) keeps what was
    * rendered, since the grid cannot draw it back.
    */
   private reconcileRows(
@@ -117,7 +118,7 @@ export class TablePostProcessor {
         cells: row.cells.map((rendered, colIndex) => {
           const fromSource = sourceRow.cells[colIndex];
           if (fromSource === undefined) return rendered;
-          return toPlainText(fromSource) === rendered ? fromSource : rendered;
+          return toPlainText(fromSource) === toPlainText(rendered) ? fromSource : rendered;
         }),
       };
     });
@@ -142,9 +143,7 @@ export class TablePostProcessor {
     ).map((tr, rowIndex) => ({
       rowIndex,
       rawLine: "",
-      cells: Array.from(tr.querySelectorAll("td")).map(
-        (td) => td.textContent?.trim() ?? ""
-      ),
+      cells: Array.from(tr.querySelectorAll("td")).map((td) => cellElementToMarkdown(td)),
     }));
 
     const sectionInfo = ctx.getSectionInfo?.(tableEl) ?? null;

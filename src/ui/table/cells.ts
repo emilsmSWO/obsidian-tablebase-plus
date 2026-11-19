@@ -4,6 +4,7 @@ import { parseCellTags } from "../../core/tag-parser";
 import { ColumnAlignment, MarkdownTableRow, TableColumn } from "../../types";
 import { appendIcon } from "../../utils/dom";
 import { attachStrictNumericInputHandlers, sanitizeNumericCellValue } from "../../utils/input";
+import { createLinkCallbacks, LinkHoverParent } from "../../utils/link-actions";
 import { renderTextWithLinks, stripCodeSpans } from "../../utils/link-renderer";
 import { ICON_TYPE_DATE } from "../icons";
 import { DatePickerPopover } from "../modals/date-picker-popover";
@@ -30,6 +31,8 @@ export class CellRenderer {
   private ctx: TableViewContext;
   private editingCell: { row: number; col: number } | null = null;
   public onTabCommit?: (shiftKey: boolean) => void;
+
+  private linkHoverParent: LinkHoverParent = { hoverPopover: null };
 
   constructor(ctx: TableViewContext) {
     this.ctx = ctx;
@@ -212,22 +215,13 @@ export class CellRenderer {
     if (isNumber) {
       wrapper.textContent = stripCodeSpans(rawValue);
     } else {
-      renderTextWithLinks(wrapper, rawValue, {
-        onExternalClick: (url, e) => {
-          e.stopPropagation();
-          this.focusCell(row.rowIndex, colIndex);
-          if (typeof window !== "undefined" && url) {
-            window.open(url, "_blank");
-          }
-        },
-        onInternalClick: (path, e) => {
-          e.stopPropagation();
-          this.focusCell(row.rowIndex, colIndex);
-          if (path && this.ctx.app?.workspace) {
-            void this.ctx.app.workspace.openLinkText?.(path, this.ctx.sourcePath || "", false);
-          }
-        },
-      });
+      renderTextWithLinks(
+        wrapper,
+        rawValue,
+        createLinkCallbacks(this.ctx.app, this.ctx.sourcePath, this.linkHoverParent, () =>
+          this.focusCell(row.rowIndex, colIndex)
+        )
+      );
     }
 
     td.addEventListener("click", () => this.focusCell(row.rowIndex, colIndex));

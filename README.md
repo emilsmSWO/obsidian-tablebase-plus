@@ -60,7 +60,7 @@ To view and edit an interactive database directly in **Live Preview** (Edit mode
 ![Interactive Table View](assets/table-demo.gif)
 
 * **Edit Cells**: Double-click any cell or press `Enter` to edit text, numbers, dates, or tags.
-* **Clickable Links**: Click `[Markdown links](url)`, raw URLs (`https://...`), or Obsidian `[[WikiLinks]]` to open them directly in your browser or notes.
+* **Clickable Links**: Click `[Markdown links](url)` (also to notes: `[text](Note.md)`, `[text](#Heading)`, `[text](<My Note.md>)`; `obsidian://`, `mailto:` and `tel:` work too), raw URLs (`https://...`), or `[[WikiLinks]]` (with `#Heading`, `^block` and `[[Page\|alias]]`) to open them in your browser or notes. Ctrl/Cmd+click opens a note in a new tab, hovering shows the preview, and links to missing notes are dimmed.
 * **Reorder Rows**: Hover over any row and drag the floating handle (`⠿`) in the left gutter to move rows up or down.
 * **Reorder Columns**: Drag any column header left or right with live drop indicators (`before` / `after`).
 * **Centered Controls**: Centered row index numbers and a centered `+ New` button at the bottom for quick row insertion.

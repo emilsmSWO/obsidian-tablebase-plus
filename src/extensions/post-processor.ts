@@ -1,5 +1,6 @@
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian";
 import { findTargetTable, parseMarkdownTables } from "../core/markdown-parser";
+import { createFallbackTableId, createTableId, findTableOrdinal } from "../core/table-id";
 import { stripTypeAnnotation } from "../core/table-mutator";
 import { toPlainText } from "../utils/link-renderer";
 import { TableViewController } from "../services/table-view-controller";
@@ -56,6 +57,7 @@ export class TablePostProcessor {
    */
   private findSourceTable(
     sectionInfo: MarkdownSectionInformation | null,
+    docTables: MarkdownTableData[],
     headers: string[],
     rowCount: number,
     tableIndex: number
@@ -63,7 +65,7 @@ export class TablePostProcessor {
     if (!sectionInfo?.text) return undefined;
 
     const candidate = findTargetTable(
-      parseMarkdownTables(sectionInfo.text),
+      docTables,
       sectionInfo.lineStart,
       headers,
       tableIndex
@@ -148,10 +150,20 @@ export class TablePostProcessor {
     const sectionInfo = ctx.getSectionInfo?.(tableEl) ?? null;
     const startLine = sectionInfo ? sectionInfo.lineStart : -1;
     const endLine = sectionInfo ? sectionInfo.lineEnd : -1;
-    const source = this.findSourceTable(sectionInfo, headers, rows.length, tableIndex);
+    const docTables = sectionInfo?.text ? parseMarkdownTables(sectionInfo.text) : [];
+    const source = this.findSourceTable(sectionInfo, docTables, headers, rows.length, tableIndex);
+
+    // The renderer is called once per section, so the index within `el` says
+    // nothing about which table of the note this is; the position in the text does.
+    const ordinal = sectionInfo
+      ? findTableOrdinal(docTables, sectionInfo.lineStart, sectionInfo.lineEnd, tableIndex)
+      : undefined;
 
     const tableData: MarkdownTableData = {
-      id: `tbl_${ctx.sourcePath || "doc"}_${tableIndex}`,
+      id:
+        ordinal !== undefined
+          ? createTableId(ctx.sourcePath, ordinal)
+          : createFallbackTableId(ctx.sourcePath, headers, tableIndex),
       headers: this.reconcileHeaders(headers, source),
       alignments: source
         ? [...source.alignments]

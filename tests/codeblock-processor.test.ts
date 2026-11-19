@@ -90,4 +90,35 @@ describe("TableCodeBlockProcessor", () => {
     expect(registry.size).toBe(0);
     expect(mockView.dispose).toHaveBeenCalled();
   });
+
+  it("should id a code block table by its position among the note's tables", () => {
+    const el = document.createElement("div");
+    const mockView = {
+      getElement: vi.fn(() => document.createElement("div")),
+      dispose: vi.fn(),
+    } as unknown as NotionTableView;
+    vi.mocked(mockViewController.createCodeBlockView).mockReturnValue(mockView);
+
+    const source = "| C | D |\n| --- | --- |\n| 3 | 4 |";
+    const text = [
+      "| A | B |",
+      "| --- | --- |",
+      "| 1 | 2 |",
+      "",
+      "```tablebase",
+      source,
+      "```",
+    ].join("\n");
+    const ctx = {
+      sourcePath: "folder/test.md",
+      addChild: vi.fn(),
+      getSectionInfo: () => ({ text, lineStart: 4, lineEnd: 8 }),
+    } as unknown as MarkdownPostProcessorContext;
+
+    processor.process(source, el, ctx);
+
+    expect(vi.mocked(mockViewController.createCodeBlockView).mock.calls[0][0].tableData.id).toBe(
+      "tbl_folder/test.md_1"
+    );
+  });
 });

@@ -1,6 +1,6 @@
-# Contributing to TableBase
+# Contributing to TableBase Plus
 
-Thank you for improving TableBase. Keep contributions focused, reviewable, and easy to release.
+Thank you for improving TableBase Plus. Keep contributions focused, reviewable, and easy to release.
 
 ## Pull requests
 

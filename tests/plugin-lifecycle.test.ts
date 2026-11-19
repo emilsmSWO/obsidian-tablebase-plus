@@ -10,8 +10,8 @@ describe("TableBasePlugin lifecycle", () => {
     } as unknown as App;
 
     const mockManifest = {
-      id: "obsidian-tablebase",
-      name: "TableBase",
+      id: "obsidian-tablebase-plus",
+      name: "TableBase Plus",
       version: "0.1.0",
       minAppVersion: "1.0.0",
       author: "Aleksei",

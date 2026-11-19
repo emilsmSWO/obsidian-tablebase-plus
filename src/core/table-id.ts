@@ -19,22 +19,23 @@ export function findTableOrdinal(
   return inSection[Math.min(Math.max(indexInSection, 0), inSection.length - 1)];
 }
 
-export function createTableId(sourcePath: string, ordinal: number): string {
-  return `tbl_${sourcePath || "doc"}_${ordinal}`;
-}
-
 /**
- * Used when the note text is not available (embeds, hover previews). The header
- * text keeps tables of the same note apart where the position is unknown.
+ * Id of a rendered table: its position in the note when the note text is known,
+ * otherwise (embeds, hover previews) its headers, which still keep tables of the
+ * same note apart.
  */
-export function createFallbackTableId(
+export function resolveTableId(
   sourcePath: string,
+  section: { lineStart: number; lineEnd: number } | null | undefined,
+  docTables: MarkdownTableData[],
   headers: string[],
-  index: number
+  indexInSection = 0
 ): string {
-  let hash = 5381;
-  for (const char of headers.join("\u0001")) {
-    hash = ((hash << 5) + hash + char.charCodeAt(0)) >>> 0;
-  }
-  return `tbl_${sourcePath || "doc"}_h${hash.toString(36)}_${index}`;
+  const ordinal = section
+    ? findTableOrdinal(docTables, section.lineStart, section.lineEnd, indexInSection)
+    : undefined;
+  const path = sourcePath || "doc";
+  return ordinal !== undefined
+    ? `tbl_${path}_${ordinal}`
+    : `tbl_${path}_${headers.join("|")}_${indexInSection}`;
 }

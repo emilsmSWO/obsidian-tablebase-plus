@@ -1,6 +1,6 @@
 import { MarkdownPostProcessorContext, MarkdownSectionInformation } from "obsidian";
 import { findTargetTable, parseMarkdownTables } from "../core/markdown-parser";
-import { createFallbackTableId, createTableId, findTableOrdinal } from "../core/table-id";
+import { resolveTableId } from "../core/table-id";
 import { stripTypeAnnotation } from "../core/table-mutator";
 import { cellElementToMarkdown } from "./cell-markdown";
 import { toPlainText } from "../utils/link-renderer";
@@ -152,17 +152,10 @@ export class TablePostProcessor {
     const docTables = sectionInfo?.text ? parseMarkdownTables(sectionInfo.text) : [];
     const source = this.findSourceTable(sectionInfo, docTables, headers, rows.length, tableIndex);
 
-    // The renderer is called once per section, so the index within `el` says
-    // nothing about which table of the note this is; the position in the text does.
-    const ordinal = sectionInfo
-      ? findTableOrdinal(docTables, sectionInfo.lineStart, sectionInfo.lineEnd, tableIndex)
-      : undefined;
-
     const tableData: MarkdownTableData = {
-      id:
-        ordinal !== undefined
-          ? createTableId(ctx.sourcePath, ordinal)
-          : createFallbackTableId(ctx.sourcePath, headers, tableIndex),
+      // The renderer is called once per section, so `tableIndex` says nothing about
+      // which table of the note this is; the position in the text does.
+      id: resolveTableId(ctx.sourcePath, sectionInfo, docTables, headers, tableIndex),
       headers: this.reconcileHeaders(headers, source),
       alignments: source
         ? [...source.alignments]

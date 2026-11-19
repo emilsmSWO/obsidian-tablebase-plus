@@ -565,11 +565,27 @@ export class TableMenus {
     section.createDiv({ cls: "ms-menu-section-title", text: "Property Type" });
 
     for (const definition of COLUMN_TYPE_DEFINITIONS) {
-      const isSelected = column.type === definition.type;
+      const isDatetime = definition.type === "datetime";
+      const isAuto = column.type === "datetime" && column.autoUpdate === true;
+      const isSelected = isDatetime
+        ? column.type === "datetime" && !isAuto
+        : column.type === definition.type;
       addCheckableItem(section, definition.icon, definition.label, isSelected, () => {
-        void this.changeColumnType(column, columnIndex, definition.type);
+        if (isDatetime && isAuto) {
+          void this.ctx.actions.onColumnAutoUpdateChange(columnIndex, false);
+        } else {
+          void this.changeColumnType(column, columnIndex, definition.type);
+        }
         menu.remove();
       });
+
+      // Same column type with the autoupdate flag; clicking it again turns the flag off.
+      if (isDatetime) {
+        addCheckableItem(section, definition.icon, "Datetime auto-update", isAuto, () => {
+          void this.ctx.actions.onColumnAutoUpdateChange(columnIndex, !isAuto);
+          menu.remove();
+        });
+      }
     }
   }
 

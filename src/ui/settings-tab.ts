@@ -10,6 +10,14 @@ import { createTagBadge } from "./tag-badge";
 const MAX_HEIGHT_DESC =
   "Tables taller than this share of the window height scroll inside it, with the header kept in view. Set 0 for no limit.";
 
+const LEFT_OFFSET_DESC =
+  "Space in pixels between the left edge of the note and a table. 0 aligns the table with the text; use about 26 to keep the row drag handle inside the note.";
+const MAX_LEFT_OFFSET = 100;
+
+function clampLeftOffset(px: number): number {
+  return Math.min(MAX_LEFT_OFFSET, Math.max(0, Math.round(px)));
+}
+
 function clampMaxTableHeight(percent: number): number {
   return Math.min(100, Math.max(0, Math.round(percent)));
 }
@@ -137,6 +145,17 @@ export class TableBaseSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: "Table left offset",
+        desc: LEFT_OFFSET_DESC,
+        control: {
+          type: "number",
+          key: "tableLeftOffset",
+          min: 0,
+          max: MAX_LEFT_OFFSET,
+          placeholder: String(DEFAULT_SETTINGS.tableLeftOffset),
+        },
+      },
+      {
         name: "Show empty properties on board cards",
         desc: "Display placeholders for empty fields on Kanban cards so they can be filled in. Checkboxes are always shown.",
         control: {
@@ -191,6 +210,12 @@ export class TableBaseSettingTab extends PluginSettingTab {
       const percent = typeof value === "number" ? value : Number(value);
       if (!Number.isFinite(percent)) return;
       await this.settingsService.updateSettings({ maxTableHeight: clampMaxTableHeight(percent) });
+      return;
+    }
+    if (key === "tableLeftOffset") {
+      const px = typeof value === "number" ? value : Number(value);
+      if (!Number.isFinite(px)) return;
+      await this.settingsService.updateSettings({ tableLeftOffset: clampLeftOffset(px) });
       return;
     }
     await this.settingsService.updateSettings({ [key]: value });
@@ -379,6 +404,23 @@ export class TableBaseSettingTab extends PluginSettingTab {
             await this.settingsService.updateSettings({
               maxTableHeight: clampMaxTableHeight(percent),
             });
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Table left offset")
+      .setDesc(LEFT_OFFSET_DESC)
+      .addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.min = "0";
+        text.inputEl.max = String(MAX_LEFT_OFFSET);
+        text
+          .setPlaceholder(String(DEFAULT_SETTINGS.tableLeftOffset))
+          .setValue(String(settings.tableLeftOffset ?? DEFAULT_SETTINGS.tableLeftOffset))
+          .onChange(async (value) => {
+            const px = Number(value);
+            if (value.trim() === "" || !Number.isFinite(px)) return;
+            await this.settingsService.updateSettings({ tableLeftOffset: clampLeftOffset(px) });
           });
       });
 

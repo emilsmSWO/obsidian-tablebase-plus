@@ -30,8 +30,8 @@
 }
 
 .ms-notion-database-container {
-  margin: 1.25rem 0 1.25rem 26px;
-  max-width: calc(100% - 26px);
+  margin: 1.25rem 0 1.25rem var(--ms-table-left-offset, 0px);
+  max-width: calc(100% - var(--ms-table-left-offset, 0px));
   border: 1px solid var(--ms-border);
   border-radius: 8px;
   background-color: var(--background-primary);
@@ -507,8 +507,8 @@ input[type="text"].ms-filter-value-input:focus {
 .markdown-rendered .ms-enhanced-table-wrapper > .ms-notion-database-container {
   margin-top: 0;
   margin-bottom: 0;
-  margin-left: 26px;
-  max-width: calc(100% - 26px);
+  margin-left: var(--ms-table-left-offset, 0px);
+  max-width: calc(100% - var(--ms-table-left-offset, 0px));
 }
 
 .ms-table-hidden {
@@ -853,15 +853,19 @@ input[type="text"].ms-filter-value-input:focus {
   height: 34px;
 }
 
-/* With a height limit the table scrolls inside its wrapper, so the header stays in view. */
-.ms-db-grid-table thead th {
+/* With a height limit the table scrolls inside its wrapper, so the header stays in view.
+   The selectors outrank theme rules for table headers so the opaque fill always applies;
+   the hover, focus and add-column tints below are layered on it as a background-image. */
+.ms-notion-database-container .ms-db-grid-table thead > tr > th,
+:is(.markdown-rendered, .cm-html-embed, .markdown-source-view) .ms-notion-database-container .ms-db-grid-table thead > tr > th {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: var(--background-primary);
+  background-color: var(--background-primary);
 }
 
-.ms-db-grid-table.has-row-numbers thead th.ms-db-th-index {
+.ms-notion-database-container .ms-db-grid-table.has-row-numbers thead > tr > th.ms-db-th-index,
+:is(.markdown-rendered, .cm-html-embed, .markdown-source-view) .ms-notion-database-container .ms-db-grid-table.has-row-numbers thead > tr > th.ms-db-th-index {
   z-index: 40;
 }
 
@@ -888,13 +892,12 @@ input[type="text"].ms-filter-value-input:focus {
   box-sizing: border-box;
 }
 
-/* Hover and focus tints are translucent; layer them on an opaque fill so a sticky header hides the rows under it. */
-.ms-db-th:hover {
-  background: linear-gradient(var(--ms-bg-hover), var(--ms-bg-hover)), var(--background-primary);
+.ms-notion-database-container .ms-db-grid-table thead > tr > th.ms-db-th:hover {
+  background-image: linear-gradient(var(--ms-bg-hover), var(--ms-bg-hover));
 }
 
-.ms-db-th.is-col-focused {
-  background: linear-gradient(var(--ms-focus-th-bg), var(--ms-focus-th-bg)), var(--background-primary);
+.ms-notion-database-container .ms-db-grid-table thead > tr > th.ms-db-th.is-col-focused {
+  background-image: linear-gradient(var(--ms-focus-th-bg), var(--ms-focus-th-bg));
   color: var(--text-normal);
   border-bottom: 2px solid var(--ms-blue-accent);
 }
@@ -912,7 +915,14 @@ input[type="text"].ms-filter-value-input:focus {
 .ms-db-th.is-dragging-col,
 .ms-db-td.is-dragging-col {
   opacity: 0.45;
+}
+
+.ms-db-td.is-dragging-col {
   background: var(--ms-bg-hover);
+}
+
+.ms-db-th.is-dragging-col {
+  background-image: linear-gradient(var(--ms-bg-hover), var(--ms-bg-hover));
 }
 
 .ms-db-th.is-col-drop-before,
@@ -1105,8 +1115,8 @@ input[type="text"].ms-filter-value-input:focus {
   border-bottom: none;
 }
 
-.ms-db-grid-table.is-add-col-hovered .ms-db-th-add-col {
-  background: linear-gradient(var(--ms-bg-hover), var(--ms-bg-hover)), var(--background-primary);
+.ms-notion-database-container .ms-db-grid-table.is-add-col-hovered thead > tr > th.ms-db-th-add-col {
+  background-image: linear-gradient(var(--ms-bg-hover), var(--ms-bg-hover));
 }
 
 .ms-db-grid-table.is-add-col-hovered .ms-db-td-add-col {
@@ -1120,8 +1130,8 @@ input[type="text"].ms-filter-value-input:focus {
   color: var(--text-normal);
 }
 
-.ms-db-grid-table.is-add-col-active .ms-db-th-add-col {
-  background: linear-gradient(var(--ms-focus-th-bg), var(--ms-focus-th-bg)), var(--background-primary);
+.ms-notion-database-container .ms-db-grid-table.is-add-col-active thead > tr > th.ms-db-th-add-col {
+  background-image: linear-gradient(var(--ms-focus-th-bg), var(--ms-focus-th-bg));
   border-bottom: 2px solid var(--ms-blue-accent);
 }
 
@@ -1444,7 +1454,9 @@ input[type="text"].ms-filter-value-input:focus {
   font-size: var(--ms-badge-font-size);
   font-weight: 500;
   line-height: 1.25;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   user-select: none;
   transition: opacity 0.15s ease, transform 0.1s ease;
   background-color: var(--tag-bg-light);

@@ -195,4 +195,37 @@ describe("changing a column type from the header menu", () => {
     processor.process(newSource, host2, ctx);
     expect(host2.querySelector('.ms-db-td[data-col-index="1"] .ms-tag-badge')).toBeNull();
   });
+
+  it("toggles datetime auto-update from the header menu", async () => {
+    const source = ["| Task | Updated |", "| --- | --- |", "| Buy milk | |"].join("\n");
+    doc = "```table\n" + source + "\n```\n";
+
+    const processor = new TableCodeBlockProcessor(controller, new TableViewRegistry());
+    const ctx = {
+      docId: "doc",
+      sourcePath: "Notes/Test.md",
+      frontmatter: null,
+      addChild: vi.fn(),
+      getSectionInfo: () => null,
+    } as unknown as MarkdownPostProcessorContext;
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    processor.process(source, host, ctx);
+
+    pickColumnType(host, 1, "Datetime auto-update");
+    await flush();
+    expect(doc).toContain("Updated [datetime:YYYY-MM-DD HH:mm,autoupdate]");
+
+    pickColumnType(host, 1, "Datetime auto-update");
+    await flush();
+    expect(doc).toContain("Updated [datetime:YYYY-MM-DD HH:mm]");
+    expect(doc).not.toContain("autoupdate");
+
+    pickColumnType(host, 1, "Datetime auto-update");
+    await flush();
+    pickColumnType(host, 1, "Datetime");
+    await flush();
+    expect(doc).not.toContain("autoupdate");
+    expect(doc).toContain("[datetime:");
+  });
 });

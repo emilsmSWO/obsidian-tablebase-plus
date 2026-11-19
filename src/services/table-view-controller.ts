@@ -18,6 +18,7 @@ import {
   applyAutoUpdateStamps,
   applyCellUpdate,
   applyChangeColumnAlignment,
+  applyChangeColumnAutoUpdate,
   applyChangeColumnCalculation,
   applyChangeColumnDateFormat,
   applyChangeColumnType,
@@ -333,6 +334,23 @@ export class TableViewController {
         commit(() => {
           applyChangeColumnCalculation(tableData, columns, colIndex, calculation);
           return { kind: "column-header", colIndex, headerText: headerAt(colIndex) };
+        }),
+
+      onColumnAutoUpdateChange: (colIndex, enabled) =>
+        commit(() => {
+          applyChangeColumnAutoUpdate(
+            tableData,
+            columns,
+            colIndex,
+            enabled,
+            this.settingsService.getSettings().datetimeFormat
+          );
+          return {
+            kind: "column-header",
+            colIndex,
+            headerText: headerAt(colIndex),
+            alignment: tableData.alignments?.[colIndex],
+          };
         }),
 
       onColumnDateFormatChange: (colIndex, newDateFormat) =>

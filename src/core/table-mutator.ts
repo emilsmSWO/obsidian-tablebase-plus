@@ -346,6 +346,32 @@ export function applyChangeColumnType(
   }
 }
 
+/** Turns "datetime:autoupdate" on or off, making the column a datetime one if it is not yet. */
+export function applyChangeColumnAutoUpdate(
+  tableData: MarkdownTableData,
+  columns: TableColumn[],
+  colIndex: number,
+  enabled: boolean,
+  defaultDatetimeFormat?: string
+): void {
+  const col = columns[colIndex];
+  if (!col) return;
+
+  if (col.type !== "datetime") {
+    applyChangeColumnType(tableData, columns, colIndex, "datetime", undefined, defaultDatetimeFormat);
+  }
+  if (enabled) col.autoUpdate = true;
+  else delete col.autoUpdate;
+
+  tableData.headers[colIndex] = formatColumnHeader(col.name, "datetime", undefined, {
+    explicit: true,
+    calculation: col.calculation,
+    width: col.width,
+    datetimeFormat: col.datetimeFormat,
+    autoUpdate: col.autoUpdate,
+  });
+}
+
 export function applyChangeColumnDateFormat(
   tableData: MarkdownTableData,
   columns: TableColumn[],

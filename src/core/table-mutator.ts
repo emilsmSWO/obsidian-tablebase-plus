@@ -8,6 +8,7 @@ import {
   TableColumn,
 } from "../types";
 import { isCalculationAllowedFor } from "./calculation-engine";
+import { clampColumnWidth, isWidthParam, parseWidthParam } from "./column-width";
 import { formatDateByOption, parseDateByOption } from "./date-utils";
 import { formatColumnAlignmentToken } from "./markdown-parser";
 
@@ -99,7 +100,7 @@ export function formatColumnHeader(
   name: string,
   type: ColumnType,
   dateFormat?: DateFormatOption,
-  options: { explicit?: boolean; calculation?: CalculationType } = {}
+  options: { explicit?: boolean; calculation?: CalculationType; width?: number } = {}
 ): string {
   const cleanName = stripTypeAnnotation(name);
   const calculation =
@@ -107,8 +108,9 @@ export function formatColumnHeader(
 
   // An un-annotated header is re-detected from its values on every render, so
   // a type the user picked by hand has to be written down to survive — and a
-  // calculation has nowhere to live without one.
-  if (!options.explicit && !calculation) {
+  // calculation or width has nowhere to live without one.
+  const width = typeof options.width === "number" ? clampColumnWidth(options.width) : undefined;
+  if (!options.explicit && !calculation && width === undefined) {
     if (type === "text") {
       const wouldBeDetectedAsAnotherType =
         SINGLE_SELECT_KEYWORDS.test(cleanName) ||
@@ -126,6 +128,9 @@ export function formatColumnHeader(
   }
   if (calculation) {
     params.push(calculation);
+  }
+  if (width !== undefined) {
+    params.push(`w=${width}`);
   }
 
   return params.length > 0
@@ -187,13 +192,20 @@ export function applyRenameColumn(
     ? col.type
     : "text";
 
-  const targetDateFormat = explicitTypeMatch && explicitTypeMatch[2]
-    ? (explicitTypeMatch[2].trim().toUpperCase() as DateFormatOption)
+  const annotatedFormat = (explicitTypeMatch?.[2] ?? "")
+    .split(",")
+    .map((param) => param.trim())
+    .filter((param) => param.length > 0 && !isWidthParam(param))
+    .join(",");
+  const targetDateFormat = annotatedFormat
+    ? (annotatedFormat.toUpperCase() as DateFormatOption)
     : col?.dateFormat;
+  const targetWidth = parseWidthParam(explicitTypeMatch?.[2]) ?? col?.width;
 
   if (col) {
     col.name = cleanName;
     col.type = targetType;
+    if (targetWidth !== undefined) col.width = targetWidth;
     if (targetType === "date") {
       col.dateFormat = targetDateFormat || "YYYY-MM-DD";
     } else {
@@ -209,6 +221,7 @@ export function applyRenameColumn(
     {
       explicit: hadExplicitType || Boolean(explicitTypeMatch),
       calculation: col?.calculation,
+      width: targetWidth,
     }
   );
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
@@ -257,6 +270,7 @@ export function applyChangeColumnType(
   const headerText = formatColumnHeader(cleanName, newType, col.dateFormat, {
     explicit: true,
     calculation: col.calculation,
+    width: col.width,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;
@@ -280,6 +294,7 @@ export function applyChangeColumnDateFormat(
 
   const headerText = formatColumnHeader(cleanName, "date", newDateFormat, {
     calculation: col.calculation,
+    width: col.width,
   });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;
@@ -335,8 +350,31 @@ export function applyChangeColumnCalculation(
   const headerText = formatColumnHeader(col.name, col.type, col.dateFormat, {
     explicit: hadExplicitType,
     calculation: col.calculation,
+    width: col.width,
   });
 
+  if (colIndex >= 0 && colIndex < tableData.headers.length) {
+    tableData.headers[colIndex] = headerText;
+  }
+}
+
+export function applyChangeColumnWidth(
+  tableData: MarkdownTableData,
+  columns: TableColumn[],
+  colIndex: number,
+  width: number
+): void {
+  const col = columns[colIndex];
+  if (!col) return;
+
+  col.width = clampColumnWidth(width);
+
+  const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
+  const headerText = formatColumnHeader(col.name, col.type, col.dateFormat, {
+    explicit: hadExplicitType,
+    calculation: col.calculation,
+    width: col.width,
+  });
   if (colIndex >= 0 && colIndex < tableData.headers.length) {
     tableData.headers[colIndex] = headerText;
   }

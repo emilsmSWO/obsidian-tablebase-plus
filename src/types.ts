@@ -49,6 +49,7 @@ export interface TableColumn {
   index: number;
   type: ColumnType;
   align?: ColumnAlignment;
+  /** Explicit width from the header's "w=" parameter; unset means the default width. */
   width?: number;
   calculation?: CalculationType;
   uniqueTags?: MultiSelectTag[];
@@ -168,7 +169,7 @@ export interface PluginSettings {
   stickyFirstColumn: boolean;
   showRowNumbers: boolean;
   showEmptyBoardProperties: boolean;
-  tableColumnWidths: Record<string, Record<string, number>>;
+  defaultColumnWidth: number;
   tableBoardGroupOrders: Record<string, Record<string, string[]>>;
 }
 
@@ -190,7 +191,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   stickyFirstColumn: true,
   showRowNumbers: false,
   showEmptyBoardProperties: false,
-  tableColumnWidths: {},
+  defaultColumnWidth: 240,
   tableBoardGroupOrders: {},
 };
 

@@ -69,20 +69,21 @@ describe("Table State Manager", () => {
     expect(columns[4].dateFormat).toBe("DD.MM.YYYY");
   });
 
-  it("should restore saved column widths for the matching table only", () => {
+  it("should read the column width from the header annotation", () => {
     const manager = new TableStateManager();
-    const settings = {
-      ...DEFAULT_SETTINGS,
-      tableColumnWidths: {
-        [tableData.id]: { "1": 234 },
-        other_table: { "1": 999 },
-      },
+    const table: MarkdownTableData = {
+      ...tableData,
+      headers: ["Title [text:w=320]", "Tags", "Due [date:DD.MM.YYYY,w=150]", "Hours [number:sum,w=5000]"],
+      alignments: ["---", "---", "---", "---"],
+      rows: [{ rowIndex: 0, rawLine: "", cells: ["a", "b", "01.02.2026", "3"] }],
     };
 
-    const columns = manager.analyzeColumns(tableData, settings);
+    const columns = manager.analyzeColumns(table, DEFAULT_SETTINGS);
 
-    expect(columns[1].width).toBe(234);
-    expect(columns[0].width).toBeUndefined();
+    expect(columns[0]).toMatchObject({ name: "Title", type: "text", width: 320 });
+    expect(columns[1].width).toBeUndefined();
+    expect(columns[2]).toMatchObject({ type: "date", dateFormat: "DD.MM.YYYY", width: 150 });
+    expect(columns[3]).toMatchObject({ type: "number", calculation: "sum", width: 2000 });
   });
 
   it("should manage filter state per tableId", () => {

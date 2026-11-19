@@ -120,8 +120,11 @@ TableBase automatically detects column types based on content, or you can explic
 | `Amount [number]` | Number | Strict numeric formatting (right-aligned) |
 | `Amount [number:sum]` | Number + Calc | Auto-calculates column Sum in footer |
 | `Done [checkbox]` | Checkbox | Centered interactive checkbox |
+| `Task [text:w=300]` | Column width | Width in pixels (60–2000), combinable with other parameters: `Amount [number:sum,w=120]` |
 
 *Type tags like `[select]` and `:sum` are automatically hidden in visual mode for a clean appearance.*
+
+Columns without `w=` use the **Default column width** (240 px). Drag a column's right edge to resize it; the width is written to the header, so it stays with the note and long text wraps inside the column.
 
 ---
 
@@ -144,6 +147,7 @@ Configure under **Obsidian Settings → TableBase**:
 * **Default Date Format**: Set preferred date display (`YYYY-MM-DD`, `DD.MM.YYYY`, etc.).
 * **Default Tag Format**: Format tags as comma-separated, `#hashtags`, or `[[wikilinks]]`.
 * **Row Numbers**: Toggle row numbers globally.
+* **Default Column Width**: Width in pixels for columns without an explicit `w=` (default `240`).
 * **Calculation Row**: Show or hide the bottom summary row.
 * **Empty Board Properties**: Show placeholders (`+ Property`) for empty fields on Kanban cards.
 * **Custom Tag Colors**: Assign permanent colors to specific tags across your vault.

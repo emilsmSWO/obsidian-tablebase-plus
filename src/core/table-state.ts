@@ -13,6 +13,7 @@ import {
 } from "../types";
 import { stripCodeSpans } from "../utils/link-renderer";
 import { isCalculationType } from "./calculation-engine";
+import { parseWidthParam } from "./column-width";
 import { parseColumnAlignment } from "./markdown-parser";
 import { isCellChecked, parseCellNumber } from "./sort-engine";
 import { parseCellTags, looksLikeMultiSelect } from "./tag-parser";
@@ -56,7 +57,7 @@ export class TableStateManager {
         inferredType = typeTagMatch[1].toLowerCase() as ColumnType;
 
         // "[date:DD.MM.YYYY,sum]" — the annotation carries the date format and
-        // the footer calculation in any order.
+        // the footer calculation in any order, plus "w=240" for the column width.
         let annotatedFormat: DateFormatOption | undefined;
         for (const param of (typeTagMatch[2] || "").split(",")) {
           const value = param.trim();
@@ -122,15 +123,13 @@ export class TableStateManager {
         ? parseColumnAlignment(rawAlign)
         : (inferredType === "number" ? "right" : inferredType === "checkbox" ? "center" : "left");
 
-      const savedWidth = settings.tableColumnWidths?.[table.id]?.[String(c)];
+      const width = parseWidthParam(typeTagMatch?.[2]);
       columns.push({
         name: cleanHeaderName,
         index: c,
         type: inferredType,
         align,
-        ...(typeof savedWidth === "number" && Number.isFinite(savedWidth)
-          ? { width: savedWidth }
-          : {}),
+        ...(width !== undefined ? { width } : {}),
         dateFormat: columnDateFormat,
         ...(columnCalculation && columnCalculation !== "none"
           ? { calculation: columnCalculation }

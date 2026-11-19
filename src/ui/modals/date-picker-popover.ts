@@ -1,5 +1,6 @@
 import { App } from "obsidian";
 import { formatDateByOption, parseAnyDate } from "../../core/date-utils";
+import { formatDatetime, hasDatePart, hasTimePart, parseDatetime } from "../../core/datetime-utils";
 import { DateFormatOption } from "../../types";
 import { appendIcon } from "../../utils/dom";
 import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT } from "../icons";
@@ -10,6 +11,8 @@ export interface DatePickerOptions {
   anchorEl: HTMLElement;
   currentDate?: string;
   dateFormat?: DateFormatOption;
+  /** When set the picker edits a datetime value, showing only the parts this format contains. */
+  datetimeFormat?: string;
   onSelectDate: (formattedDate: string) => Promise<void>;
 }
 
@@ -31,6 +34,7 @@ export class DatePickerPopover {
   private viewDate: Date;
   private selectedDateStr: string;
   private selectedDate: Date | null;
+  private time: Date;
   private viewMode: DatePickerViewMode = "days";
   private yearPageStart: number;
 
@@ -38,8 +42,9 @@ export class DatePickerPopover {
     this.options = options;
     this.selectedDateStr = options.currentDate?.trim() ?? "";
 
-    const parsed = parseAnyDate(this.selectedDateStr, this.dateFormat);
+    const parsed = this.parse(this.selectedDateStr);
     this.selectedDate = parsed;
+    this.time = parsed ?? new Date();
     this.viewDate = parsed ? new Date(parsed.getTime()) : new Date();
     this.yearPageStart =
       Math.floor(this.viewDate.getFullYear() / YEARS_PER_PAGE) * YEARS_PER_PAGE;
@@ -49,6 +54,30 @@ export class DatePickerPopover {
 
   private get dateFormat(): DateFormatOption {
     return this.options.dateFormat ?? "YYYY-MM-DD";
+  }
+
+  private get datetimeFormat(): string | undefined {
+    return this.options.datetimeFormat;
+  }
+
+  private get showsCalendar(): boolean {
+    return !this.datetimeFormat || hasDatePart(this.datetimeFormat);
+  }
+
+  private get showsTime(): boolean {
+    return !!this.datetimeFormat && hasTimePart(this.datetimeFormat);
+  }
+
+  private parse(value: string): Date | null {
+    return this.datetimeFormat
+      ? parseDatetime(value, this.datetimeFormat)
+      : parseAnyDate(value, this.dateFormat);
+  }
+
+  private format(date: Date): string {
+    return this.datetimeFormat
+      ? formatDatetime(date, this.datetimeFormat)
+      : formatDateByOption(date, this.dateFormat);
   }
 
   public open(): void {
@@ -74,6 +103,10 @@ export class DatePickerPopover {
   private render(): void {
     this.containerEl.empty();
 
+    if (!this.showsCalendar) {
+      this.renderTimeControls();
+      return;
+    }
     if (this.viewMode === "days") {
       this.renderDaysView();
     } else if (this.viewMode === "months") {
@@ -81,6 +114,59 @@ export class DatePickerPopover {
     } else {
       this.renderYearsView();
     }
+    if (this.showsTime && this.viewMode === "days") {
+      this.renderTimeControls();
+    }
+  }
+
+  private async commit(date: Date): Promise<void> {
+    await this.options.onSelectDate(this.format(date));
+    this.close();
+  }
+
+  private renderTimeControls(): void {
+    const format = this.datetimeFormat ?? "";
+    const row = this.containerEl.createDiv({ cls: "ms-date-time-row" });
+    const inputs: Array<[boolean, number, (d: Date, v: number) => void]> = [
+      [/HH|hh/.test(format), 23, (d, v) => d.setHours(v)],
+      [/mm/.test(format), 59, (d, v) => d.setMinutes(v)],
+      [/ss/.test(format), 59, (d, v) => d.setSeconds(v)],
+    ];
+    const getters = [
+      () => this.time.getHours(),
+      () => this.time.getMinutes(),
+      () => this.time.getSeconds(),
+    ];
+    inputs.forEach(([shown, max, set], i) => {
+      if (!shown) return;
+      const input = row.createEl("input", {
+        type: "number",
+        cls: "ms-date-time-input",
+        value: String(getters[i]()).padStart(2, "0"),
+      });
+      input.min = "0";
+      input.max = String(max);
+      input.addEventListener("click", (e) => e.stopPropagation());
+      input.addEventListener("change", () => {
+        const value = Math.min(max, Math.max(0, Math.floor(Number(input.value)) || 0));
+        set(this.time, value);
+        input.value = String(value).padStart(2, "0");
+      });
+    });
+
+    const actions = this.containerEl.createDiv({ cls: "ms-date-time-actions" });
+    const nowBtn = actions.createEl("button", { text: "Now" });
+    nowBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      void this.commit(new Date());
+    });
+    const applyBtn = actions.createEl("button", { cls: "mod-cta", text: "Apply" });
+    applyBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const date = new Date(this.selectedDate ?? new Date());
+      date.setHours(this.time.getHours(), this.time.getMinutes(), this.time.getSeconds(), 0);
+      void this.commit(date);
+    });
   }
 
   private createNavHeader(config: {
@@ -178,17 +264,16 @@ export class DatePickerPopover {
       });
     }
 
-    const todayFormatted = formatDateByOption(new Date(), this.dateFormat);
+    const today = new Date();
 
     for (let day = 1; day <= totalDaysInMonth; day++) {
-      const formatted = formatDateByOption(new Date(year, month, day), this.dateFormat);
       const isSelected =
-        (this.selectedDate !== null &&
-          this.selectedDate.getFullYear() === year &&
-          this.selectedDate.getMonth() === month &&
-          this.selectedDate.getDate() === day) ||
-        formatted === this.selectedDateStr;
-      const isToday = formatted === todayFormatted;
+        this.selectedDate !== null &&
+        this.selectedDate.getFullYear() === year &&
+        this.selectedDate.getMonth() === month &&
+        this.selectedDate.getDate() === day;
+      const isToday =
+        today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
 
       const cell = daysGrid.createDiv({
         cls: `ms-date-day-cell ${isSelected ? "is-selected" : ""} ${isToday ? "is-today" : ""}`,
@@ -197,10 +282,13 @@ export class DatePickerPopover {
 
       cell.addEventListener("click", (e) => {
         e.stopPropagation();
-        void (async () => {
-          await this.options.onSelectDate(formatted);
-          this.close();
-        })();
+        const picked = new Date(year, month, day);
+        if (this.showsTime) {
+          this.selectedDate = picked;
+          this.render();
+          return;
+        }
+        void this.commit(picked);
       });
     }
   }

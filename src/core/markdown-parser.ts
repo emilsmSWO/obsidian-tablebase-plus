@@ -321,7 +321,8 @@ export function updateCellInDocument(
   colIndex: number,
   newCellValue: string,
   headers?: string[],
-  tableIndex?: number
+  tableIndex?: number,
+  extraCells: Array<{ colIndex: number; value: string }> = []
 ): string {
   return mutateTableInDocument(
     docContent,
@@ -329,6 +330,9 @@ export function updateCellInDocument(
     (table) => {
       if (!table.rows[rowIndex]) return false;
       table.rows[rowIndex].cells[colIndex] = newCellValue;
+      for (const extra of extraCells) {
+        table.rows[rowIndex].cells[extra.colIndex] = extra.value;
+      }
       return true;
     },
     headers,

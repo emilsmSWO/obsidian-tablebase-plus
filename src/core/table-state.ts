@@ -14,6 +14,7 @@ import {
 import { stripCodeSpans } from "../utils/link-renderer";
 import { isCalculationType } from "./calculation-engine";
 import { parseWidthParam } from "./column-width";
+import { DEFAULT_DATETIME_FORMAT, parseDatetimeParams } from "./datetime-utils";
 import { parseColumnAlignment } from "./markdown-parser";
 import { isCellChecked, parseCellNumber } from "./sort-engine";
 import { parseCellTags, looksLikeMultiSelect } from "./tag-parser";
@@ -51,6 +52,8 @@ export class TableStateManager {
       let cleanHeaderName = stripTypeAnnotation(rawHeader);
       let columnDateFormat: DateFormatOption | undefined;
       let columnCalculation: CalculationType | undefined;
+      let columnDatetimeFormat: string | undefined;
+      let columnAutoUpdate = false;
 
       const typeTagMatch = rawHeader.match(TYPE_ANNOTATION_REGEX);
       if (typeTagMatch) {
@@ -69,7 +72,12 @@ export class TableStateManager {
           }
         }
 
-        if (inferredType === "date") {
+        if (inferredType === "datetime") {
+          const datetime = parseDatetimeParams(typeTagMatch[2]);
+          columnDatetimeFormat =
+            datetime.format || settings.datetimeFormat || DEFAULT_DATETIME_FORMAT;
+          columnAutoUpdate = datetime.autoUpdate;
+        } else if (inferredType === "date") {
           columnDateFormat =
             settings.dateFormat ||
             annotatedFormat ||
@@ -131,6 +139,8 @@ export class TableStateManager {
         align,
         ...(width !== undefined ? { width } : {}),
         dateFormat: columnDateFormat,
+        ...(columnDatetimeFormat ? { datetimeFormat: columnDatetimeFormat } : {}),
+        ...(columnAutoUpdate ? { autoUpdate: true } : {}),
         ...(columnCalculation && columnCalculation !== "none"
           ? { calculation: columnCalculation }
           : {}),

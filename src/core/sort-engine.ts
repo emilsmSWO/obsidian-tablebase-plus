@@ -1,6 +1,7 @@
 import { MarkdownTableRow, SortDirection, SortRule, TableColumn } from "../types";
 import { parseCellTags } from "./tag-parser";
 import { compareDateStrings } from "./date-utils";
+import { compareDatetimeStrings } from "./datetime-utils";
 import { stripCodeSpans } from "../utils/link-renderer";
 
 const CHECKED_VALUES = new Set<string>([
@@ -46,7 +47,8 @@ function isEmptyCell(value: string): boolean {
 function compareByType(
   valA: string,
   valB: string,
-  columnType: TableColumn["type"]
+  columnType: TableColumn["type"],
+  datetimeFormat?: string
 ): number {
   switch (columnType) {
     case "number": {
@@ -74,6 +76,10 @@ function compareByType(
       return compareDateStrings(valA, valB);
     }
 
+    case "datetime": {
+      return compareDatetimeStrings(valA, valB, datetimeFormat);
+    }
+
     case "text":
     case "select":
     default: {
@@ -90,7 +96,8 @@ export function compareRowsByColumn(
   b: MarkdownTableRow,
   columnIndex: number,
   direction: SortDirection,
-  columnType: TableColumn["type"] = "text"
+  columnType: TableColumn["type"] = "text",
+  datetimeFormat?: string
 ): number {
   const valA = stripCodeSpans(a.cells[columnIndex] || "");
   const valB = stripCodeSpans(b.cells[columnIndex] || "");
@@ -102,7 +109,7 @@ export function compareRowsByColumn(
   if (isEmptyB) return -1;
 
   const factor = direction === "asc" ? 1 : -1;
-  return compareByType(valA, valB, columnType) * factor;
+  return compareByType(valA, valB, columnType, datetimeFormat) * factor;
 }
 
 export function sortRows(
@@ -133,7 +140,8 @@ export function sortRowsByRules(
         b,
         rule.columnIndex,
         rule.direction,
-        column ? column.type : "text"
+        column ? column.type : "text",
+        column?.datetimeFormat
       );
       if (result !== 0) {
         return result;

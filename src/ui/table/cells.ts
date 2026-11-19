@@ -1,4 +1,5 @@
 import { formatDateByOption, parseAnyDate } from "../../core/date-utils";
+import { normalizeDatetime } from "../../core/datetime-utils";
 import { isCellChecked } from "../../core/sort-engine";
 import { parseCellTags } from "../../core/tag-parser";
 import { ColumnAlignment, MarkdownTableRow, TableColumn } from "../../types";
@@ -56,6 +57,7 @@ export class CellRenderer {
         this.renderCheckbox(td, row, colIndex, displayValue);
         break;
       case "date":
+      case "datetime":
         this.renderDate(td, row, col, colIndex, displayValue, rawValue);
         break;
       case "select":
@@ -120,9 +122,12 @@ export class CellRenderer {
       const targetFormat =
         col.dateFormat ?? this.ctx.settings.dateFormat ?? "YYYY-MM-DD";
       const parsedDate = parseAnyDate(displayValue, targetFormat);
-      const displayText = parsedDate
-        ? formatDateByOption(parsedDate, targetFormat)
-        : displayValue;
+      const displayText =
+        col.type === "datetime"
+          ? normalizeDatetime(displayValue, col.datetimeFormat ?? this.ctx.settings.datetimeFormat)
+          : parsedDate
+          ? formatDateByOption(parsedDate, targetFormat)
+          : displayValue;
       wrapper.createSpan({ cls: "ms-date-text", text: displayText });
     } else {
       wrapper.createSpan({ cls: "ms-cell-empty-placeholder", text: "Empty" });
@@ -242,6 +247,10 @@ export class CellRenderer {
       anchorEl: anchor,
       currentDate: currentValue,
       dateFormat: col?.dateFormat ?? this.ctx.settings.dateFormat ?? "YYYY-MM-DD",
+      datetimeFormat:
+        col?.type === "datetime"
+          ? col.datetimeFormat ?? this.ctx.settings.datetimeFormat
+          : undefined,
       onSelectDate: async (newDate) => {
         await this.ctx.actions.onCellUpdate(rowIndex, colIndex, newDate);
         this.ctx.render();

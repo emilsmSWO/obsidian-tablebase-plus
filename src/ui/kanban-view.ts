@@ -1,6 +1,7 @@
 import { App } from "obsidian";
 import { resolveTagColor } from "../core/color-palette";
 import { formatDateByOption, parseAnyDate } from "../core/date-utils";
+import { normalizeDatetime } from "../core/datetime-utils";
 import { evaluateFilterStateOnRow } from "../core/filter-engine";
 import { isCellChecked } from "../core/sort-engine";
 import { parseCellTags } from "../core/tag-parser";
@@ -455,6 +456,7 @@ export class KanbanView {
           this.renderSelectProperty(propsEl, row, col, colIndex, cellValue);
           return;
         case "date":
+        case "datetime":
           this.renderDateProperty(propsEl, row, col, colIndex, cellValue);
           return;
         case "checkbox":
@@ -543,9 +545,13 @@ export class KanbanView {
     const targetFormat =
       col.dateFormat ?? this.options.settings.dateFormat ?? "YYYY-MM-DD";
     const parsedDate = parseAnyDate(cellValue, targetFormat);
-    const displayText = parsedDate
-      ? formatDateByOption(parsedDate, targetFormat)
-      : cellValue || col.name;
+    const displayText =
+      col.type === "datetime"
+        ? normalizeDatetime(cellValue, col.datetimeFormat ?? this.options.settings.datetimeFormat) ||
+          col.name
+        : parsedDate
+        ? formatDateByOption(parsedDate, targetFormat)
+        : cellValue || col.name;
     appendIconLabel(badge, ICON_TYPE_DATE, displayText);
     badge.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -717,6 +723,10 @@ export class KanbanView {
       anchorEl: anchor,
       currentDate,
       dateFormat: col?.dateFormat ?? this.options.settings.dateFormat ?? "YYYY-MM-DD",
+      datetimeFormat:
+        col?.type === "datetime"
+          ? col.datetimeFormat ?? this.options.settings.datetimeFormat
+          : undefined,
       onSelectDate: async (newDate) => {
         await this.options.actions.onCellUpdate(rowIndex, colIndex, newDate);
         this.render();

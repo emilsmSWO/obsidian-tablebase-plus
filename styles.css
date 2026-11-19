@@ -2044,6 +2044,25 @@ input[type="text"].ms-col-menu-name-input:focus {
   text-align: center;
 }
 
+.ms-date-time-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.ms-date-time-input {
+  width: 52px;
+  text-align: center;
+}
+
+.ms-date-time-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
 .ms-date-day-header {
   font-size: 0.75em;
   color: var(--ms-text-muted);

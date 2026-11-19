@@ -97,6 +97,7 @@ Edits made outside Obsidian are not tracked. See **Datetime & Last-Modified Colu
 * **Single-Select Dropdowns**: Select a status (*Todo*, *In Progress*, *Done*) from a Notion-style dropdown menu.
 * **Multi-Select Badges**: Add multiple tags per cell with instant search-as-you-type and badge creation.
 * **Color Palettes**: Choose from 10 Notion-inspired palette colors or pick custom colors.
+* **Reload list**: The option list is built from the values in the table. Use **Reload list** (below *Clear selection*) to rebuild it after you removed or renamed values. The saved option order is keyed by note, table position and column name; it follows renamed notes, is dropped for deleted ones, and options no longer in the table are removed after a restart.
 
 ### 📅 Visual Date Picker
 * Click any date cell to open an interactive calendar popover.

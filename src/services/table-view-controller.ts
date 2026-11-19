@@ -12,6 +12,7 @@ import {
   serializeMarkdownTable,
   updateCellInDocument,
 } from "../core/markdown-parser";
+import { mergeListOrder } from "../core/list-order";
 import {
   applyAddColumn,
   applyAddRow,
@@ -37,6 +38,7 @@ import {
   MarkdownTableData,
   MarkdownTableRow,
   SortRule,
+  TableColumn,
 } from "../types";
 import { NotionTableView } from "../ui/table/table-view";
 import { TableViewActions } from "../ui/table/types";
@@ -94,6 +96,7 @@ export class TableViewController {
   private syncService: TableSyncService;
   private editorScroll: Map<string, { top: number; left: number }> = new Map();
   private editorScrollObservers: Map<string, MutationObserver> = new Map();
+  private settledLists = new Set<string>();
 
   constructor(
     app: App,
@@ -152,6 +155,43 @@ export class TableViewController {
     return this.createView(tableData, persist, sourcePath);
   }
 
+  /**
+   * Gives select and multi-select columns their saved option order and saves it when it changed.
+   * Options the table no longer uses are dropped when the table is first shown in a session
+   * (and on reload), but kept afterwards so a Board group stays when its last card moves away.
+   * `resetColumn` rebuilds one column's order from the table.
+   */
+  private applyListOrders(tableId: string, columns: TableColumn[], resetColumn?: string): void {
+    const settings = this.settingsService.getSettings();
+    const saved = settings.tableBoardGroupOrders?.[tableId] ?? {};
+    const next: Record<string, string[]> = {};
+    const keepUnused = this.settledLists.has(tableId);
+    this.settledLists.add(tableId);
+
+    for (const column of columns) {
+      if (column.type !== "select" && column.type !== "multi-select") continue;
+
+      const tags = column.uniqueTags ?? [];
+      const savedNames = column.name === resetColumn ? [] : saved[column.name] ?? [];
+      const orderedNames = mergeListOrder(
+        savedNames,
+        tags.map((tag) => tag.name),
+        keepUnused && column.name !== resetColumn
+      );
+      next[column.name] = orderedNames;
+      const tagsByName = new Map(tags.map((tag) => [tag.name, tag]));
+      column.uniqueTags = orderedNames.map(
+        (name) => tagsByName.get(name) ?? { id: name.toLowerCase(), name, color: "gray" as const }
+      );
+    }
+
+    if (JSON.stringify(saved) === JSON.stringify(next)) return;
+    const orders = { ...(settings.tableBoardGroupOrders ?? {}) };
+    if (Object.keys(next).length > 0) orders[tableId] = next;
+    else delete orders[tableId];
+    void this.settingsService.updateSettings({ tableBoardGroupOrders: orders });
+  }
+
   private createView(
     tableData: MarkdownTableData,
     persist: PersistOperation,
@@ -159,39 +199,7 @@ export class TableViewController {
   ): NotionTableView {
     const settings = this.settingsService.getSettings();
     const columns = this.stateManager.analyzeColumns(tableData, settings);
-    const savedGroupOrders = settings.tableBoardGroupOrders?.[tableData.id] ?? {};
-    const tableGroupOrders: Record<string, string[]> = { ...savedGroupOrders };
-
-    for (const column of columns) {
-      if (column.type !== "select" && column.type !== "multi-select") continue;
-
-      const currentNames = (column.uniqueTags ?? []).map((tag) => tag.name);
-      const savedNames = tableGroupOrders[String(column.index)] ?? [];
-      const orderedNames = [
-        ...savedNames,
-        ...currentNames.filter((name) => !savedNames.includes(name)),
-      ];
-      tableGroupOrders[String(column.index)] = orderedNames;
-      const tagsByName = new Map((column.uniqueTags ?? []).map((tag) => [tag.name, tag]));
-      column.uniqueTags = orderedNames.flatMap((name) => {
-        return [
-          tagsByName.get(name) ?? {
-            id: name.toLowerCase(),
-            name,
-            color: "gray" as const,
-          },
-        ];
-      });
-    }
-
-    if (JSON.stringify(savedGroupOrders) !== JSON.stringify(tableGroupOrders)) {
-      void this.settingsService.updateSettings({
-        tableBoardGroupOrders: {
-          ...(settings.tableBoardGroupOrders ?? {}),
-          [tableData.id]: tableGroupOrders,
-        },
-      });
-    }
+    this.applyListOrders(tableData.id, columns);
     const filterState = this.stateManager.getOrCreateFilterState(tableData.id);
     filterState.sortRules ??= [];
 
@@ -393,6 +401,23 @@ export class TableViewController {
 
       onTagColorChange: async (tagName, color) => {
         await this.settingsService.setTagColor(tagName, color);
+      },
+
+      onReloadList: (colIndex) => {
+        const fresh = this.stateManager.analyzeColumns(
+          tableData,
+          this.settingsService.getSettings()
+        );
+        for (const column of columns) {
+          column.uniqueTags = fresh.find((item) => item.index === column.index)?.uniqueTags;
+        }
+        this.applyListOrders(
+          tableData.id,
+          columns,
+          columns.find((column) => column.index === colIndex)?.name
+        );
+        view?.render();
+        return Promise.resolve();
       },
 
       // The grid already shows the new width, so there is nothing to re-render.

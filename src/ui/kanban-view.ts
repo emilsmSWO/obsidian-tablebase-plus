@@ -679,6 +679,7 @@ export class KanbanView {
         await this.options.actions.onTagColorChange(tagName, color);
         this.render();
       },
+      onReloadList: () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
       onSelect: async (selectedTag) => {
         await this.options.actions.onCellUpdate(rowIndex, colIndex, selectedTag);
         this.render();
@@ -703,6 +704,7 @@ export class KanbanView {
         void this.options.actions.onTagColorChange(tagName, color);
         this.render();
       },
+      onReloadList: () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
       onSave: (newValue) => {
         void this.options.actions.onCellUpdate(rowIndex, colIndex, newValue).then(() => {
           this.render();

@@ -3,7 +3,7 @@ import { parseCellTags } from "../../core/tag-parser";
 import { MultiSelectTag, PluginSettings, TagColor } from "../../types";
 import { appendIcon, appendIconLabel } from "../../utils/dom";
 import { createColorPickerElement } from "../color-picker";
-import { ICON_CHECK, ICON_CLEAR, ICON_PALETTE, ICON_PLUS, ICON_SEARCH } from "../icons";
+import { ICON_CHECK, ICON_CLEAR, ICON_RELOAD, ICON_PALETTE, ICON_PLUS, ICON_SEARCH } from "../icons";
 import { mountFloatingPopover } from "../popover";
 import { createTagBadge } from "../tag-badge";
 
@@ -16,6 +16,7 @@ export interface SingleSelectPopoverOptions {
   settings: PluginSettings;
   onSelect: (selectedTag: string) => Promise<void>;
   onTagColorChange?: (tagName: string, color: TagColor) => Promise<void>;
+  onReloadList?: () => Promise<void>;
 }
 
 const OPTION_ITEM_SELECTOR = ".ms-select-option-item, .ms-create-option-item";
@@ -154,13 +155,24 @@ export class SingleSelectPopover {
       this.renderCreateOption(container, this.searchQuery.trim());
     }
 
-    if (!this.currentTagName) return;
+    if (!this.currentTagName && !this.options.onReloadList) return;
 
     container.createDiv({ cls: "ms-menu-divider" });
-    const clearItem = container.createDiv({ cls: "ms-menu-item is-danger" });
-    appendIconLabel(clearItem, ICON_CLEAR, "Clear selection");
-    clearItem.addEventListener("click", () => {
-      void this.selectOption("");
+    if (this.currentTagName) {
+      const clearItem = container.createDiv({ cls: "ms-menu-item is-danger" });
+      appendIconLabel(clearItem, ICON_CLEAR, "Clear selection");
+      clearItem.addEventListener("click", () => {
+        void this.selectOption("");
+      });
+    }
+
+    const { onReloadList } = this.options;
+    if (!onReloadList) return;
+    const reloadItem = container.createDiv({ cls: "ms-menu-item" });
+    appendIconLabel(reloadItem, ICON_RELOAD, "Reload list");
+    reloadItem.setAttribute("title", "Rebuild the option list from the values in the table");
+    reloadItem.addEventListener("click", () => {
+      void onReloadList().then(() => this.close());
     });
   }
 

@@ -60,6 +60,22 @@ export default class TableBasePlugin extends Plugin {
       );
     }
 
+    this.registerEvent(
+      this.app.vault.on("rename", (file, oldPath) => {
+        void this.settingsService.moveListOrders(oldPath, file.path);
+      })
+    );
+    this.registerEvent(
+      this.app.vault.on("delete", (file) => {
+        void this.settingsService.moveListOrders(file.path, null);
+      })
+    );
+    this.app.workspace.onLayoutReady(() => {
+      void this.settingsService.pruneListOrders(
+        (path) => this.app.vault.getAbstractFileByPath(path) !== null
+      );
+    });
+
     this.addSettingTab(new TableBaseSettingTab(this.app, this, this.settingsService));
   }
 

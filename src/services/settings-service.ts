@@ -1,3 +1,4 @@
+import { moveListOrders, pruneListOrders } from "../core/list-order";
 import { DEFAULT_SETTINGS, PluginSettings, TagColor } from "../types";
 
 export interface SettingsStorage {
@@ -60,6 +61,16 @@ export class SettingsService {
       delete this.settings.customTagColors[key];
       await this.saveSettings();
     }
+  }
+
+  public async moveListOrders(oldPath: string, newPath: string | null): Promise<void> {
+    const next = moveListOrders(this.settings.tableBoardGroupOrders ?? {}, oldPath, newPath);
+    if (next) await this.updateSettings({ tableBoardGroupOrders: next });
+  }
+
+  public async pruneListOrders(exists: (path: string) => boolean): Promise<void> {
+    const next = pruneListOrders(this.settings.tableBoardGroupOrders ?? {}, exists);
+    if (next) await this.updateSettings({ tableBoardGroupOrders: next });
   }
 
   public async resetDefaults(): Promise<void> {

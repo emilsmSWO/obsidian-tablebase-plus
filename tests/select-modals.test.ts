@@ -329,6 +329,34 @@ describe("UI Modals and Popovers", () => {
     });
   });
 
+  describe("Reload list", () => {
+    it("is offered below Clear selection and runs the reload", async () => {
+      const anchorEl = document.createElement("button");
+      document.body.appendChild(anchorEl);
+      stubLayout(anchorEl);
+
+      const onReloadList = vi.fn().mockResolvedValue(undefined);
+      new SingleSelectPopover({
+        app: {} as App,
+        anchorEl,
+        columnName: "Status",
+        currentValue: "Todo",
+        allAvailableTags: [{ id: "todo", name: "Todo", color: "blue" }],
+        settings: { ...DEFAULT_SETTINGS },
+        onSelect: vi.fn().mockResolvedValue(undefined),
+        onReloadList,
+      }).open();
+
+      const items = Array.from(document.body.querySelectorAll(".ms-menu-item"));
+      const labels = items.map((el) => el.textContent);
+      expect(labels.findIndex((t) => t?.includes("Reload list"))).toBeGreaterThan(
+        labels.findIndex((t) => t?.includes("Clear selection"))
+      );
+      (items.find((el) => el.textContent?.includes("Reload list")) as HTMLElement).click();
+      expect(onReloadList).toHaveBeenCalled();
+    });
+  });
+
   describe("TagSelectModal", () => {
     it("should render tags and save formatted cell on apply", () => {
       const onSave = vi.fn();

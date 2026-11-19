@@ -42,12 +42,14 @@ export interface TableViewActions {
   onFilterChange(state: TableFilterState): void;
   onSortChange(sortRules: SortRule[]): void;
   onTagColorChange(tagName: string, color: TagColor): Promise<void>;
+  /** Rebuilds the option order of a select or multi-select column from the table. */
+  onReloadList?(this: void, colIndex: number): Promise<void>;
   onColumnResize?(this: void, colIndex: number, width: number): Promise<void>;
 }
 
 export type BoardViewActions = Pick<
   TableViewActions,
-  "onCellUpdate" | "onAddRow" | "onDeleteRow" | "onReorderRows" | "onTagColorChange"
+  "onCellUpdate" | "onAddRow" | "onDeleteRow" | "onReorderRows" | "onTagColorChange" | "onReloadList"
 >;
 
 export interface TableViewOptions {

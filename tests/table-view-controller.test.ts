@@ -90,6 +90,36 @@ describe("TableViewController", () => {
     expect(view.columns[1].uniqueTags?.map((tag) => tag.name)).toEqual(["Todo", "Done"]);
   });
 
+  it("should drop options no longer in the table after a restart and rebuild one list on reload", async () => {
+    const make = (rows: string[]) =>
+      controller.createInlineTableView({
+        sourcePath: "inline.md",
+        tableData: parseMarkdownTables(
+          `| Task | Status |\n| --- | --- |\n${rows.join("\n")}`
+        )[0],
+        startLine: 0,
+        tableIndex: 0,
+      });
+    const names = (view: ReturnType<typeof make>): string[] =>
+      view.columns[1].uniqueTags?.map((tag) => tag.name) ?? [];
+    const savedOrders = () => settingsService.getSettings().tableBoardGroupOrders;
+
+    make(["| A | Todo |", "| B | Done |"]);
+    await Promise.resolve();
+    expect(Object.values(savedOrders())[0]).toEqual({ Status: ["Todo", "Done"] });
+
+    // A new controller stands for a restart: "Todo" is gone and "Review" is new.
+    controller = new TableViewController(app, settingsService, stateManager, syncService);
+    const view = make(["| A | Review |", "| B | Done |"]);
+    await Promise.resolve();
+    expect(names(view)).toEqual(["Done", "Review"]);
+    expect(Object.values(savedOrders())[0]).toEqual({ Status: ["Done", "Review"] });
+
+    await view.actions.onReloadList?.(1);
+    expect(names(view)).toEqual(["Review", "Done"]);
+    expect(Object.values(savedOrders())[0]).toEqual({ Status: ["Review", "Done"] });
+  });
+
   it("should restore editor scroll after a file update replaces the view DOM", async () => {
     const leaf = document.createElement("div");
     leaf.className = "workspace-leaf mod-active";

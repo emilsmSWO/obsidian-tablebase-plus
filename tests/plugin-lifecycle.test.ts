@@ -5,8 +5,8 @@ import TableBasePlugin from "../src/main";
 describe("TableBasePlugin lifecycle", () => {
   it("should initialize all services on onload and clean up on onunload", async () => {
     const mockApp = {
-      vault: {},
-      workspace: {},
+      vault: { on: vi.fn(), getAbstractFileByPath: vi.fn() },
+      workspace: { onLayoutReady: vi.fn() },
     } as unknown as App;
 
     const mockManifest = {

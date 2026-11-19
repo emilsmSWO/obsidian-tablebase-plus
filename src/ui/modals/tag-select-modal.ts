@@ -15,6 +15,7 @@ export interface TagSelectModalOptions {
   allAvailableTags: MultiSelectTag[];
   onSave: (formattedCellText: string, tags: MultiSelectTag[]) => void;
   onTagColorChange?: (tagName: string, color: TagColor) => void;
+  onReloadList?: () => Promise<void>;
 }
 
 export class TagSelectModal extends Modal {
@@ -88,6 +89,17 @@ export class TagSelectModal extends Modal {
 
     const cancelBtn = footerEl.createEl("button", { text: "Cancel", cls: "mod-warning" });
     cancelBtn.addEventListener("click", () => this.close());
+
+    const { onReloadList } = this.options;
+    if (onReloadList) {
+      const reloadBtn = footerEl.createEl("button", {
+        text: "Reload list",
+        attr: { title: "Rebuild the option list from the values in the table" },
+      });
+      reloadBtn.addEventListener("click", () => {
+        void onReloadList().then(() => this.close());
+      });
+    }
   }
 
   private renderSelectedTags(container: HTMLElement): void {

@@ -277,6 +277,7 @@ export class CellRenderer {
         await this.ctx.actions.onTagColorChange(tagName, color);
         this.ctx.render();
       },
+      onReloadList: () => this.reloadList(colIndex),
       onSelect: async (selectedTag) => {
         await this.ctx.actions.onCellUpdate(row.rowIndex, colIndex, selectedTag);
         this.ctx.render();
@@ -301,12 +302,17 @@ export class CellRenderer {
         void this.ctx.actions.onTagColorChange(tagName, color);
         this.ctx.render();
       },
+      onReloadList: () => this.reloadList(colIndex),
       onSave: (formattedText) => {
         void this.ctx.actions.onCellUpdate(row.rowIndex, colIndex, formattedText).then(() => {
           this.ctx.render();
         });
       },
     }).open();
+  }
+
+  private reloadList(colIndex: number): Promise<void> {
+    return this.ctx.actions.onReloadList?.(colIndex) ?? Promise.resolve();
   }
 
   public startInlineEditing(

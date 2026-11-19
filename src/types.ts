@@ -181,6 +181,7 @@ export interface PluginSettings {
   maxTableHeight: number;
   /** Pixels between the left edge of the note and a table; 0 aligns it with the text. */
   tableLeftOffset: number;
+  /** Option order per table and column name, see core/list-order. */
   tableBoardGroupOrders: Record<string, Record<string, string[]>>;
 }
 

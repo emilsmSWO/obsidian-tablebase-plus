@@ -228,7 +228,24 @@ describe("Table grid UX", () => {
     expect(actions.onAddRow).toHaveBeenCalledTimes(2);
   });
 
-  it("should resize only the selected column from the pointer delta", () => {
+  it("should lay columns out at their own width or the default, summed into the table width", () => {
+    const columns: TableColumn[] = SAMPLE_COLUMNS.map((col, index) =>
+      index === 1 ? { ...col, width: 300 } : col
+    );
+    const { ctx, grid } = buildGrid(SAMPLE, columns);
+    ctx.settings.defaultColumnWidth = 200;
+    grid.render(ctx.containerEl);
+
+    const colWidths = Array.from(
+      ctx.containerEl.querySelectorAll<HTMLElement>("col[data-column-index]")
+    ).map((el) => el.style.width);
+    expect(colWidths).toEqual(["200px", "300px", "200px"]);
+    expect(ctx.containerEl.querySelector<HTMLElement>("th.ms-db-th[data-col-index='1']")?.style.maxWidth).toBe("300px");
+    // 200 + 300 + 200 + the "add column" gutter
+    expect(ctx.containerEl.querySelector<HTMLElement>("table.ms-db-grid-table")?.style.width).toBe("728px");
+  });
+
+  it("should resize only the selected column and report its new width on release", () => {
     const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
     const onColumnResize = vi.fn(async () => undefined);
     ctx.actions.onColumnResize = onColumnResize;
@@ -237,31 +254,35 @@ describe("Table grid UX", () => {
     const headers = Array.from(
       ctx.containerEl.querySelectorAll<HTMLElement>("th.ms-db-th")
     );
-    const widths = [120, 180, 90];
-    headers.forEach((header, index) => {
-      vi.spyOn(header, "getBoundingClientRect").mockReturnValue({
-        width: widths[index],
-        left: widths.slice(0, index).reduce((sum, width) => sum + width, 0),
-        right: widths.slice(0, index + 1).reduce((sum, width) => sum + width, 0),
-        top: 0,
-        bottom: 30,
-        height: 30,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      });
-    });
-
     const resizer = headers[1].querySelector<HTMLElement>(".ms-col-resizer");
     expect(resizer).not.toBeNull();
     resizer?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 200 }));
-    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 250 }));
-    expect(headers[1].style.width).toBe("230px");
-    expect(headers[0].style.width).toBe("120px");
-    expect(headers[2].style.width).toBe("90px");
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 150 }));
+    expect(headers[1].style.width).toBe("190px");
+    expect(headers[0].style.width).toBe("240px");
+    expect(headers[2].style.width).toBe("240px");
+    expect(ctx.containerEl.querySelector<HTMLElement>("table.ms-db-grid-table")?.style.width).toBe("698px");
 
     document.dispatchEvent(new MouseEvent("mouseup"));
-    expect(onColumnResize).toHaveBeenCalledWith({ "0": 120, "1": 230, "2": 90 });
+    expect(onColumnResize).toHaveBeenCalledWith(1, 190);
+  });
+
+  it("should not keep a column narrower than the minimum, and ignore a click without movement", () => {
+    const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
+    const onColumnResize = vi.fn(async () => undefined);
+    ctx.actions.onColumnResize = onColumnResize;
+    grid.render(ctx.containerEl);
+
+    const th = ctx.containerEl.querySelector<HTMLElement>("th.ms-db-th[data-col-index='0']");
+    const resizer = th?.querySelector<HTMLElement>(".ms-col-resizer");
+    resizer?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 500 }));
+    document.dispatchEvent(new MouseEvent("mouseup"));
+    expect(onColumnResize).not.toHaveBeenCalled();
+
+    resizer?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 500 }));
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: 0 }));
+    document.dispatchEvent(new MouseEvent("mouseup"));
+    expect(onColumnResize).toHaveBeenCalledWith(0, 60);
   });
 
   it("should show the calculation bar only when enabled for the table", () => {

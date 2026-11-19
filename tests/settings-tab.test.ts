@@ -185,4 +185,29 @@ describe("TableBaseSettingTab", () => {
     expect(settingsService.getSettings().showRowNumbers).toBe(false);
     expect(settingsService.getSettings().defaultTagFormat).toBe("comma");
   });
+
+  it("should default the column width to 240 and store a clamped value from the input", async () => {
+    const plugin = createMockPlugin();
+    const settingsService = new SettingsService(plugin);
+    await settingsService.loadSettings();
+    expect(settingsService.getSettings().defaultColumnWidth).toBe(240);
+
+    const tab = new TableBaseSettingTab({} as App, plugin, settingsService);
+    tab.display();
+
+    const input = tab.containerEl.querySelector<HTMLInputElement>('input[type="number"]');
+    expect(input?.value).toBe("240");
+
+    input!.value = "320";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().defaultColumnWidth).toBe(320);
+
+    input!.value = "5";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().defaultColumnWidth).toBe(60);
+
+    input!.value = "";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().defaultColumnWidth).toBe(60);
+  });
 });

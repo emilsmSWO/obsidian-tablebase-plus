@@ -20,6 +20,7 @@ import {
   applyChangeColumnCalculation,
   applyChangeColumnDateFormat,
   applyChangeColumnType,
+  applyChangeColumnWidth,
   applyDeleteColumn,
   applyDeleteRow,
   applyDuplicateRow,
@@ -334,17 +335,15 @@ export class TableViewController {
         await this.settingsService.setTagColor(tagName, color);
       },
 
-      onColumnResize: async (widths) => {
-        const settings = this.settingsService.getSettings();
-        const tableColumnWidths = {
-          ...settings.tableColumnWidths,
-          [tableData.id]: {
-            ...(settings.tableColumnWidths?.[tableData.id] ?? {}),
-            ...widths,
+      // The grid already shows the new width, so there is nothing to re-render.
+      onColumnResize: (colIndex, width) =>
+        commit(
+          () => {
+            applyChangeColumnWidth(tableData, columns, colIndex, width);
+            return { kind: "column-header", colIndex, headerText: headerAt(colIndex) };
           },
-        };
-        await this.settingsService.updateSettings({ tableColumnWidths });
-      },
+          { refresh: false }
+        ),
     };
 
     view = new NotionTableView({

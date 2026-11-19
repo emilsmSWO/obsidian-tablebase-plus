@@ -7,6 +7,7 @@ import {
   applyChangeColumnCalculation,
   applyChangeColumnDateFormat,
   applyChangeColumnType,
+  applyChangeColumnWidth,
   applyDeleteColumn,
   applyDeleteRow,
   applyDuplicateRow,
@@ -273,6 +274,35 @@ describe("Table Mutator Engine", () => {
     applyChangeColumnType(tableData, columns, 2, "checkbox");
     expect(columns[2].calculation).toBeUndefined();
     expect(tableData.headers[2]).toBe("Effort [checkbox]");
+  });
+
+  it("should store the column width in the header and keep it through other header edits", () => {
+    const { tableData, columns } = createSampleTable();
+
+    applyChangeColumnWidth(tableData, columns, 2, 310);
+    expect(columns[2].width).toBe(310);
+    expect(tableData.headers[2]).toBe("Hours [number:w=310]");
+
+    applyChangeColumnCalculation(tableData, columns, 2, "sum");
+    expect(tableData.headers[2]).toBe("Hours [number:sum,w=310]");
+
+    applyRenameColumn(tableData, columns, 2, "Effort");
+    expect(tableData.headers[2]).toBe("Effort [number:sum,w=310]");
+
+    applyChangeColumnType(tableData, columns, 2, "text");
+    expect(tableData.headers[2]).toBe("Effort [text:w=310]");
+
+    applyRenameColumn(tableData, columns, 2, "Effort [text:w=100]");
+    expect(columns[2].width).toBe(100);
+    expect(tableData.headers[2]).toBe("Effort [text:w=100]");
+  });
+
+  it("should write an explicit type next to the width of an auto-detected column", () => {
+    const { tableData, columns } = createSampleTable();
+
+    applyChangeColumnWidth(tableData, columns, 1, 5);
+    expect(columns[1].width).toBe(60);
+    expect(tableData.headers[1]).toBe("Status [select:w=60]");
   });
 
   it("should keep the calculation next to the date format", () => {

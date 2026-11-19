@@ -1,4 +1,10 @@
 import { calculateColumnSummary } from "../../core/calculation-engine";
+import {
+  ADD_COLUMN_WIDTH,
+  computeTableWidth,
+  INDEX_COLUMN_WIDTH,
+  resolveColumnWidth,
+} from "../../core/column-width";
 import { evaluateFilterStateOnRow } from "../../core/filter-engine";
 import { sortRowsByRules } from "../../core/sort-engine";
 import { MarkdownTableRow, TableColumn } from "../../types";
@@ -17,8 +23,6 @@ import { bindColumnResizer, ColumnDragController, RowDragController } from "./dn
 import { TableMenus } from "./menus";
 import { TableViewContext } from "./types";
 
-const ADD_COLUMN_WIDTH = 28;
-const INDEX_COLUMN_WIDTH = 42;
 
 export class TableGrid {
   private ctx: TableViewContext;
@@ -78,6 +82,15 @@ export class TableGrid {
         .join(" "),
     });
     this.tableEl = tableEl;
+    // Columns have fixed widths, so the table is as wide as their sum rather than
+    // stretching narrower columns to the container.
+    const tableWidth = `${computeTableWidth(
+      this.ctx.getVisibleColumns(),
+      settings.defaultColumnWidth,
+      showRowNumbers
+    )}px`;
+    tableEl.style.width = tableWidth;
+    tableEl.style.minWidth = tableWidth;
 
     tableEl.addEventListener("mouseover", (e) => {
       const target = e.target as HTMLElement | null;
@@ -173,7 +186,7 @@ export class TableGrid {
       const colEl = colgroup.createEl("col", {
         attr: { "data-column-index": `${col.index}` },
       });
-      if (col.width) setFixedWidth(colEl, col.width);
+      setFixedWidth(colEl, resolveColumnWidth(col, this.ctx.settings.defaultColumnWidth));
     }
     const addCol = colgroup.createEl("col", { cls: "ms-db-col-add" });
     setFixedWidth(addCol, ADD_COLUMN_WIDTH);
@@ -222,12 +235,7 @@ export class TableGrid {
     if (this.ctx.selection.isColumnHighlighted(columnIndex)) {
       th.classList.add("is-col-focused");
     }
-    if (col.width) {
-      th.setCssStyles({
-        width: `${col.width}px`,
-        minWidth: `${col.width}px`,
-      });
-    }
+    setFixedWidth(th, resolveColumnWidth(col, this.ctx.settings.defaultColumnWidth));
 
     this.columnDrag.attachHeader(th, columnIndex);
 
@@ -281,6 +289,10 @@ export class TableGrid {
       col,
       this.tableEl!,
       this.ctx.getVisibleColumns(),
+      {
+        defaultWidth: this.ctx.settings.defaultColumnWidth,
+        showRowNumbers: this.ctx.isRowNumbersVisible(),
+      },
       this.ctx.actions.onColumnResize
     );
   }

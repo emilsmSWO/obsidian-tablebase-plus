@@ -1,5 +1,6 @@
+import { clampColumnWidth, computeTableWidth, resolveColumnWidth } from "../../core/column-width";
 import { MarkdownTableRow, TableColumn } from "../../types";
-import { appendIcon } from "../../utils/dom";
+import { appendIcon, setFixedWidth } from "../../utils/dom";
 import { Disposable, DisposableRegistry } from "../../utils/lifecycle";
 import { ICON_GRIP } from "../icons";
 import { closeAllFloatingPopovers } from "../popover";
@@ -9,7 +10,6 @@ import { TableViewContext } from "./types";
 const ROW_MIME_TYPE = "application/x-obsidian-table-row";
 const HANDLE_HIDE_DELAY_MS = 300;
 const HANDLE_HEIGHT = 24;
-const MIN_COLUMN_WIDTH = 60;
 
 const DROP_TARGET_CLASSES = [
   "is-row-drop-target-top",
@@ -547,6 +547,11 @@ export class ColumnDragController {
   }
 }
 
+export interface ColumnResizeLayout {
+  defaultWidth: number | undefined;
+  showRowNumbers: boolean;
+}
+
 export function bindColumnResizer(
   registry: DisposableRegistry,
   resizer: HTMLElement,
@@ -554,7 +559,8 @@ export function bindColumnResizer(
   column: TableColumn,
   table: HTMLTableElement,
   columns: TableColumn[],
-  onResize?: (widths: Record<string, number>) => void | Promise<void>
+  layout: ColumnResizeLayout,
+  onResize?: (colIndex: number, width: number) => void | Promise<void>
 ): void {
   let startX = 0;
   let startWidth = 0;
@@ -562,17 +568,11 @@ export function bindColumnResizer(
   const dragRegistry = registry.add(new DisposableRegistry());
 
   const stopResize = (): void => {
-    if (currentWidth > 0) {
-      column.width = currentWidth;
-    }
     table.classList.remove("is-resizing-columns");
-    const widths = Object.fromEntries(
-      columns
-        .filter((col) => typeof col.width === "number" && Number.isFinite(col.width))
-        .map((col) => [String(col.index), col.width as number])
-    );
-    void onResize?.(widths);
     dragRegistry.disposeAll();
+    if (currentWidth !== startWidth) {
+      void onResize?.(column.index, currentWidth);
+    }
   };
 
   resizer.addEventListener("mousedown", (e) => {
@@ -580,70 +580,25 @@ export function bindColumnResizer(
     e.preventDefault();
 
     startX = e.clientX;
-    const headers = Array.from(table.querySelectorAll<HTMLElement>("th.ms-db-th"));
-    const colElements = new Map(
-      Array.from(table.querySelectorAll<HTMLElement>("col[data-column-index]")).map((el) => [
-        el.dataset.columnIndex,
-        el,
-      ])
-    );
-
-    for (const header of headers) {
-      const index = Number(header.dataset.colIndex);
-      const target = columns.find((col) => col.index === index);
-      if (!target) continue;
-      const measured = header.getBoundingClientRect().width || header.offsetWidth;
-      const width = Math.max(
-        MIN_COLUMN_WIDTH,
-        measured || target.width || MIN_COLUMN_WIDTH
-      );
-      target.width = width;
-      setColumnWidth(header, width);
-      const colElement = colElements.get(header.dataset.colIndex);
-      if (colElement) setColumnWidth(colElement, width);
-    }
-
-    setTableWidth(table, columns);
-    table.classList.add("is-resizing-columns");
-
-    startWidth =
-      Math.max(
-        MIN_COLUMN_WIDTH,
-        th.getBoundingClientRect().width || th.offsetWidth || column.width || MIN_COLUMN_WIDTH
-      );
+    startWidth = resolveColumnWidth(column, layout.defaultWidth);
     currentWidth = startWidth;
+    table.classList.add("is-resizing-columns");
     dragRegistry.disposeAll();
 
+    const colElement = table.querySelector<HTMLElement>(
+      `col[data-column-index="${column.index}"]`
+    );
+
     dragRegistry.listen(document, "mousemove", (moveEvent: MouseEvent) => {
-      currentWidth = Math.max(MIN_COLUMN_WIDTH, startWidth + (moveEvent.clientX - startX));
+      currentWidth = clampColumnWidth(startWidth + (moveEvent.clientX - startX));
       column.width = currentWidth;
-      setColumnWidth(th, currentWidth);
-      const colElement = colElements.get(th.dataset.colIndex);
-      if (colElement) setColumnWidth(colElement, currentWidth);
-      setTableWidth(table, columns);
+      setFixedWidth(th, currentWidth);
+      if (colElement) setFixedWidth(colElement, currentWidth);
+      const tableWidth = `${computeTableWidth(columns, layout.defaultWidth, layout.showRowNumbers)}px`;
+      table.style.width = tableWidth;
+      table.style.minWidth = tableWidth;
     });
 
     dragRegistry.listen(document, "mouseup", stopResize);
   });
-}
-
-function setColumnWidth(element: HTMLElement, width: number): void {
-  element.setCssStyles({
-    width: `${width}px`,
-    minWidth: `${width}px`,
-    maxWidth: `${width}px`,
-  });
-}
-
-function setTableWidth(table: HTMLTableElement, columns: TableColumn[]): void {
-  const dataWidth = columns.reduce(
-    (sum, col) => sum + (col.width ?? MIN_COLUMN_WIDTH),
-    0
-  );
-  const fixedWidth = Array.from(
-    table.querySelectorAll<HTMLElement>("col.ms-db-col-index, col.ms-db-col-add")
-  ).reduce((sum, col) => sum + (col.getBoundingClientRect().width || col.offsetWidth), 0);
-  const width = dataWidth + fixedWidth;
-  table.style.width = `${width}px`;
-  table.style.minWidth = `${width}px`;
 }

@@ -1,9 +1,13 @@
 import { App, Plugin, PluginSettingTab, Setting, SettingDefinitionItem } from "obsidian";
+import { clampColumnWidth, DEFAULT_COLUMN_WIDTH, MAX_COLUMN_WIDTH, MIN_COLUMN_WIDTH } from "../core/column-width";
 import { DATE_FORMAT_OPTIONS } from "../core/date-utils";
 import { SettingsService } from "../services/settings-service";
 import { DateFormatOption, TagColor, TagFormat } from "../types";
 import { createColorPickerElement } from "./color-picker";
 import { createTagBadge } from "./tag-badge";
+
+const COLUMN_WIDTH_DESC =
+  "Width in pixels of columns that have no width of their own. Drag a column edge to set one; it is saved in the header as [text:w=300].";
 
 export class TableBaseSettingTab extends PluginSettingTab {
   private settingsService: SettingsService;
@@ -76,6 +80,17 @@ export class TableBaseSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: "Default column width",
+        desc: COLUMN_WIDTH_DESC,
+        control: {
+          type: "number",
+          key: "defaultColumnWidth",
+          min: MIN_COLUMN_WIDTH,
+          max: MAX_COLUMN_WIDTH,
+          placeholder: String(DEFAULT_COLUMN_WIDTH),
+        },
+      },
+      {
         name: "Show empty properties on board cards",
         desc: "Display placeholders for empty fields on Kanban cards so they can be filled in. Checkboxes are always shown.",
         control: {
@@ -118,6 +133,12 @@ export class TableBaseSettingTab extends PluginSettingTab {
               .filter((name) => name.length > 0)
           : [];
       await this.settingsService.updateSettings({ multiSelectColumnNames: names });
+      return;
+    }
+    if (key === "defaultColumnWidth") {
+      const width = typeof value === "number" ? value : Number(value);
+      if (!Number.isFinite(width)) return;
+      await this.settingsService.updateSettings({ defaultColumnWidth: clampColumnWidth(width) });
       return;
     }
     await this.settingsService.updateSettings({ [key]: value });
@@ -243,6 +264,31 @@ export class TableBaseSettingTab extends PluginSettingTab {
             await this.settingsService.updateSettings({ showRowNumbers: value });
           })
       );
+
+    new Setting(containerEl)
+      .setName("Default column width")
+      .setDesc(COLUMN_WIDTH_DESC)
+      .addText((text) => {
+        text.inputEl.type = "number";
+        text.inputEl.min = String(MIN_COLUMN_WIDTH);
+        text.inputEl.max = String(MAX_COLUMN_WIDTH);
+        text
+          .setPlaceholder(String(DEFAULT_COLUMN_WIDTH))
+          .setValue(String(settings.defaultColumnWidth ?? DEFAULT_COLUMN_WIDTH))
+          .onChange(async (value) => {
+            const width = Number(value);
+            if (value.trim() === "" || !Number.isFinite(width)) return;
+            await this.settingsService.updateSettings({
+              defaultColumnWidth: clampColumnWidth(width),
+            });
+          });
+        // Clamping happens while typing, so show the stored value once editing ends.
+        text.inputEl.addEventListener("blur", () => {
+          text.setValue(
+            String(this.settingsService.getSettings().defaultColumnWidth ?? DEFAULT_COLUMN_WIDTH)
+          );
+        });
+      });
 
     new Setting(containerEl)
       .setName("Show empty properties on board cards")

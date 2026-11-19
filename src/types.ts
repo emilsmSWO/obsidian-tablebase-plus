@@ -179,6 +179,8 @@ export interface PluginSettings {
   defaultColumnWidth: number;
   /** Percent of the window height a table may grow to before it scrolls; 0 means no limit. */
   maxTableHeight: number;
+  /** Pixels between the left edge of the note and a table; 0 aligns it with the text. */
+  tableLeftOffset: number;
   tableBoardGroupOrders: Record<string, Record<string, string[]>>;
 }
 
@@ -204,6 +206,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   showEmptyBoardProperties: false,
   defaultColumnWidth: 240,
   maxTableHeight: 60,
+  tableLeftOffset: 0,
   tableBoardGroupOrders: {},
 };
 

@@ -71,6 +71,7 @@ export class TableGrid {
 
     const { settings } = this.ctx;
     const showRowNumbers = this.ctx.isRowNumbersVisible();
+    container.style.setProperty("--ms-table-left-offset", `${settings.tableLeftOffset ?? 0}px`);
     const maxHeight = settings.maxTableHeight;
     if (typeof maxHeight === "number" && maxHeight > 0) {
       scrollWrapper.style.maxHeight = `${Math.min(maxHeight, 100)}vh`;

@@ -256,4 +256,20 @@ describe("TableBaseSettingTab", () => {
     input!.dispatchEvent(new Event("input"));
     expect(settingsService.getSettings().maxTableHeight).toBe(100);
   });
+
+  it("stores the table left offset clamped to 0-100 px, defaulting to 0", async () => {
+    const plugin = createMockPlugin();
+    const settingsService = new SettingsService(plugin);
+    await settingsService.loadSettings();
+    expect(settingsService.getSettings().tableLeftOffset).toBe(0);
+
+    const tab = new TableBaseSettingTab({} as App, plugin, settingsService);
+    tab.display();
+    const input = Array.from(
+      tab.containerEl.querySelectorAll<HTMLInputElement>('input[type="number"]')
+    ).find((el) => el.max === "100" && el.value === "0");
+    input!.value = "250";
+    input!.dispatchEvent(new Event("input"));
+    expect(settingsService.getSettings().tableLeftOffset).toBe(100);
+  });
 });

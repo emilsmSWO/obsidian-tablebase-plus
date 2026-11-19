@@ -261,6 +261,13 @@ describe("Table grid UX", () => {
     expect(wrapper()?.style.maxHeight).toBe("");
   });
 
+  it("should pass the left offset setting to the container as a CSS variable", () => {
+    const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
+    ctx.settings.tableLeftOffset = 12;
+    grid.render(ctx.containerEl);
+    expect(ctx.containerEl.style.getPropertyValue("--ms-table-left-offset")).toBe("12px");
+  });
+
   it("should resize only the selected column and report its new width on release", () => {
     const { ctx, grid } = buildGrid(SAMPLE, SAMPLE_COLUMNS);
     const onColumnResize = vi.fn(async () => undefined);

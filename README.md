@@ -57,6 +57,18 @@ Add `w=<pixels>` to a column header to fix its width (60–2000 px). Long text w
 
 Drag a column's right edge in the interactive view and `w=` is written to the header for you. Columns without `w=` use the **Default column width** setting.
 
+### 4. Last-Change Timestamp (`datetime:autoupdate`)
+Add `autoupdate` to a `datetime` column header and the column is set to the current time whenever a row is changed in TableBase Plus:
+
+```markdown
+| Task [text] | Status [select] | Updated [datetime:YYYY-MM-DD HH:mm,autoupdate,w=160] |
+| :--- | :---: | :---: |
+| Redesign landing page | In Progress | 2026-11-19 16:05 |
+| Implement auth API | Done | 2026-11-18 09:30 |
+```
+
+Edits made outside Obsidian are not tracked. See **Datetime & Last-Modified Columns** below for details.
+
 ---
 
 ## 🌟 Features & How to Use
@@ -146,6 +158,8 @@ TableBase Plus automatically detects column types based on content, or you can e
 Columns without `w=` use the **Default column width** (240 px). Drag a column's right edge to resize it; the width is written to the header, so it stays with the note and long text wraps inside the column.
 
 Tables taller than the **Maximum table height** (60% of the window height by default, 0 for no limit) scroll inside their own area with a sticky header, so the horizontal scrollbar stays on screen. Shorter tables keep their natural height.
+
+Tables start flush with the note text. The **Table left offset** setting (0 px by default) adds space on the left; use about 26 px to keep the row drag handle inside the note. Long select and multi-select options wrap inside the column.
 
 ---
 

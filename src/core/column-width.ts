@@ -12,10 +12,6 @@ export function clampColumnWidth(width: number): number {
   return Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, Math.round(width)));
 }
 
-export function isWidthParam(param: string): boolean {
-  return WIDTH_PARAM.test(param.trim());
-}
-
 /** Reads "w=300" out of a header annotation's parameter list ("sum,w=300"). */
 export function parseWidthParam(params: string | undefined): number | undefined {
   for (const param of (params ?? "").split(",")) {
@@ -29,13 +25,10 @@ export function resolveColumnWidth(
   column: Pick<TableColumn, "width">,
   defaultWidth: number | undefined
 ): number {
-  const fallback =
-    typeof defaultWidth === "number" && Number.isFinite(defaultWidth)
-      ? clampColumnWidth(defaultWidth)
-      : DEFAULT_COLUMN_WIDTH;
-  return typeof column.width === "number" && Number.isFinite(column.width)
-    ? clampColumnWidth(column.width)
-    : fallback;
+  const width = column.width ?? defaultWidth;
+  return typeof width === "number" && Number.isFinite(width)
+    ? clampColumnWidth(width)
+    : DEFAULT_COLUMN_WIDTH;
 }
 
 export function computeTableWidth(

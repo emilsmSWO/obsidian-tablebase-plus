@@ -8,7 +8,7 @@ import {
   TableColumn,
 } from "../types";
 import { isCalculationAllowedFor } from "./calculation-engine";
-import { clampColumnWidth, isWidthParam, parseWidthParam } from "./column-width";
+import { clampColumnWidth, parseWidthParam } from "./column-width";
 import { formatDateByOption, parseDateByOption } from "./date-utils";
 import { formatColumnAlignmentToken } from "./markdown-parser";
 
@@ -195,7 +195,7 @@ export function applyRenameColumn(
   const annotatedFormat = (explicitTypeMatch?.[2] ?? "")
     .split(",")
     .map((param) => param.trim())
-    .filter((param) => param.length > 0 && !isWidthParam(param))
+    .filter((param) => param.length > 0 && parseWidthParam(param) === undefined)
     .join(",");
   const targetDateFormat = annotatedFormat
     ? (annotatedFormat.toUpperCase() as DateFormatOption)

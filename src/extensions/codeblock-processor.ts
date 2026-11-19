@@ -1,6 +1,6 @@
 import { MarkdownPostProcessorContext } from "obsidian";
 import { parseMarkdownTables } from "../core/markdown-parser";
-import { createFallbackTableId, createTableId, findTableOrdinal } from "../core/table-id";
+import { resolveTableId } from "../core/table-id";
 import { TableViewController } from "../services/table-view-controller";
 import { TableViewRegistry } from "../services/table-view-registry";
 import { isPrintMode } from "./print-mode";
@@ -37,13 +37,7 @@ export class TableCodeBlockProcessor {
     // where the block sits among the note's tables.
     const section = ctx.getSectionInfo?.(el);
     const docTables = section?.text ? parseMarkdownTables(section.text) : [];
-    const ordinal = section
-      ? findTableOrdinal(docTables, section.lineStart, section.lineEnd)
-      : undefined;
-    tableData.id =
-      ordinal !== undefined
-        ? createTableId(ctx.sourcePath, ordinal)
-        : createFallbackTableId(ctx.sourcePath, tableData.headers, 0);
+    tableData.id = resolveTableId(ctx.sourcePath, section, docTables, tableData.headers);
 
     const view = this.viewController.createCodeBlockView({
       sourcePath: ctx.sourcePath,

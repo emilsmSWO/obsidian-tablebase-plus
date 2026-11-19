@@ -69,6 +69,22 @@ Add `autoupdate` to a `datetime` column header and the column is set to the curr
 
 Edits made outside Obsidian are not tracked. See **Datetime & Last-Modified Columns** below for details.
 
+### 5. Dictionaries (`dict=`)
+A dictionary is a named, ordered list of options with colors, defined once in the settings and shared by many `select` and `multi-select` columns. Bind a column to it in the header:
+
+```markdown
+| Task [text] | Status [select:dict=Statusy] | Tags [multi-select:dict=Tagi,w=200] |
+| :--- | :--- | :--- |
+| Redesign landing page | In Progress | Frontend, Bug |
+```
+
+1. Create dictionaries under **Settings → TableBase Plus → Dictionaries**: add items, pick a color per item, reorder with the arrows, then press **Save** (or **Revert** to drop the edit). A dictionary cannot be renamed; use **Clone** to copy it under a new name.
+2. Names are unique ignoring case and cannot contain `, [ ] =`. Item names are unique within a dictionary and cannot contain `, ;`.
+3. In the column header menu, **List source** switches a column between **Custom** (options come from the values in the table) and any dictionary.
+4. In a bound column only dictionary items can be picked, in the dictionary order and with the dictionary colors. A color comes from the dictionary, else from the global tag color, else it is automatic.
+5. Values in the table that are not in the dictionary are shown in red and bold; the Markdown is not changed. The Kanban board shows one group per dictionary item, plus a group for each such value.
+6. Deleting a dictionary turns its columns back into custom lists.
+
 ---
 
 ## 🌟 Features & How to Use
@@ -152,6 +168,7 @@ TableBase Plus automatically detects column types based on content, or you can e
 | `Amount [number]` | Number | Strict numeric formatting (right-aligned) |
 | `Amount [number:sum]` | Number + Calc | Auto-calculates column Sum in footer |
 | `Done [checkbox]` | Checkbox | Centered interactive checkbox |
+| `Status [select:dict=Statusy]` | Dictionary | Options, order and colors come from the dictionary `Statusy` (settings) |
 | `Task [text:w=300]` | Column width | Width in pixels (60–2000), combinable with other parameters: `Amount [number:sum,w=120]` |
 
 *Type tags like `[select]` and `:sum` are automatically hidden in visual mode for a clean appearance.*
@@ -187,6 +204,7 @@ Configure under **Obsidian Settings → TableBase Plus**:
 * **Default Column Width**: Width in pixels for columns without an explicit `w=` (default `240`).
 * **Calculation Row**: Show or hide the bottom summary row.
 * **Empty Board Properties**: Show placeholders (`+ Property`) for empty fields on Kanban cards.
+* **Dictionaries**: Named option lists with colors for select and multi-select columns, see [Dictionaries](#5-dictionaries-dict).
 * **Custom Tag Colors**: Assign permanent colors to specific tags across your vault.
 
 ---

@@ -2669,3 +2669,89 @@ input[type="text"].ms-modal-name-input.is-invalid {
   }
 }
 
+
+.ms-tag-badge.is-outside-dictionary .ms-tag-text {
+  color: var(--text-error);
+  font-weight: 700;
+}
+
+.ms-dict-setting {
+  flex-wrap: wrap;
+}
+
+.ms-dict-editor {
+  flex-basis: 100%;
+  width: 100%;
+}
+
+.ms-dict {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  margin-bottom: 6px;
+}
+
+.ms-dict-summary {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.ms-dict-name {
+  font-weight: 600;
+}
+
+.ms-dict-count {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.ms-dict-body {
+  padding: 4px 10px 10px;
+}
+
+.ms-dict-item-line,
+.ms-dict-add,
+.ms-dict-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.ms-dict-item-line input,
+.ms-dict-add input {
+  flex: 1;
+  min-width: 0;
+}
+
+.ms-dict-swatch {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid var(--background-modifier-border);
+}
+
+.ms-dict-picker {
+  margin: 4px 0 0 28px;
+}
+
+.ms-dict-status {
+  min-height: 1.2em;
+  margin-top: 6px;
+}
+
+.ms-dict-error {
+  color: var(--text-error);
+}
+
+.ms-dict-unsaved {
+  color: var(--text-warning, var(--text-muted));
+}
+
+.ms-dict-new {
+  margin-top: 10px;
+}

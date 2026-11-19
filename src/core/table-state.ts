@@ -15,6 +15,7 @@ import { stripCodeSpans } from "../utils/link-renderer";
 import { isCalculationType } from "./calculation-engine";
 import { parseWidthParam } from "./column-width";
 import { DEFAULT_DATETIME_FORMAT, parseDatetimeParams } from "./datetime-utils";
+import { dictionaryColors, dictionaryTags, findDictionary, parseDictParam } from "./dictionary";
 import { parseColumnAlignment } from "./markdown-parser";
 import { isCellChecked, parseCellNumber } from "./sort-engine";
 import { parseCellTags, looksLikeMultiSelect } from "./tag-parser";
@@ -125,6 +126,10 @@ export class TableStateManager {
         }
       }
 
+      const isList = inferredType === "multi-select" || inferredType === "select";
+      const dictionaryName = isList ? parseDictParam(typeTagMatch?.[2]) : undefined;
+      const dictionary = findDictionary(settings.dictionaries, dictionaryName);
+
       const rawAlign = table.alignments?.[c];
       const hasExplicitAlign = rawAlign ? rawAlign.trim().includes(":") : false;
       const align: ColumnAlignment = hasExplicitAlign
@@ -144,7 +149,13 @@ export class TableStateManager {
         ...(columnCalculation && columnCalculation !== "none"
           ? { calculation: columnCalculation }
           : {}),
-        uniqueTags: Array.from(tagMap.values()),
+        ...(dictionaryName ? { dictionary: dictionaryName } : {}),
+        ...(dictionary
+          ? { dictionaryColors: dictionaryColors(dictionary, settings.customTagColors) }
+          : {}),
+        uniqueTags: dictionary
+          ? dictionaryTags(dictionary, settings.customTagColors)
+          : Array.from(tagMap.values()),
       });
     }
 

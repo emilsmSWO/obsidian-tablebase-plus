@@ -21,6 +21,7 @@ import {
   applyChangeColumnAlignment,
   applyChangeColumnAutoUpdate,
   applyChangeColumnCalculation,
+  applyChangeColumnDictionary,
   applyChangeColumnDateFormat,
   applyChangeColumnType,
   applyChangeColumnWidth,
@@ -170,6 +171,7 @@ export class TableViewController {
 
     for (const column of columns) {
       if (column.type !== "select" && column.type !== "multi-select") continue;
+      if (column.dictionaryColors) continue;
 
       const tags = column.uniqueTags ?? [];
       const savedNames = column.name === resetColumn ? [] : saved[column.name] ?? [];
@@ -190,6 +192,22 @@ export class TableViewController {
     if (Object.keys(next).length > 0) orders[tableId] = next;
     else delete orders[tableId];
     void this.settingsService.updateSettings({ tableBoardGroupOrders: orders });
+  }
+
+  /** Rebuilds every list from the table and the dictionaries; `resetColumn` also drops its saved order. */
+  private rebuildLists(
+    tableData: MarkdownTableData,
+    columns: TableColumn[],
+    resetColumn?: string
+  ): void {
+    const fresh = this.stateManager.analyzeColumns(tableData, this.settingsService.getSettings());
+    for (const column of columns) {
+      const next = fresh.find((item) => item.index === column.index);
+      column.uniqueTags = next?.uniqueTags;
+      if (next?.dictionaryColors) column.dictionaryColors = next.dictionaryColors;
+      else delete column.dictionaryColors;
+    }
+    this.applyListOrders(tableData.id, columns, resetColumn);
   }
 
   private createView(
@@ -404,21 +422,21 @@ export class TableViewController {
       },
 
       onReloadList: (colIndex) => {
-        const fresh = this.stateManager.analyzeColumns(
+        this.rebuildLists(
           tableData,
-          this.settingsService.getSettings()
-        );
-        for (const column of columns) {
-          column.uniqueTags = fresh.find((item) => item.index === column.index)?.uniqueTags;
-        }
-        this.applyListOrders(
-          tableData.id,
           columns,
           columns.find((column) => column.index === colIndex)?.name
         );
         view?.render();
         return Promise.resolve();
       },
+
+      onColumnDictionaryChange: (colIndex, dictionary) =>
+        commit(() => {
+          applyChangeColumnDictionary(tableData, columns, colIndex, dictionary);
+          this.rebuildLists(tableData, columns);
+          return { kind: "column-header", colIndex, headerText: headerAt(colIndex) };
+        }),
 
       // The grid already shows the new width, so there is nothing to re-render.
       onColumnResize: (colIndex, width) =>
@@ -442,6 +460,7 @@ export class TableViewController {
     });
 
     const unsubscribe = this.settingsService.subscribe((updatedSettings) => {
+      if (columns.some((column) => column.dictionary)) this.rebuildLists(tableData, columns);
       view?.updateSettings(updatedSettings);
     });
     view.registry.addFn(unsubscribe);

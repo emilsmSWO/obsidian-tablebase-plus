@@ -16,6 +16,20 @@ export interface MultiSelectTag {
   id: string;
   name: string;
   color: TagColor;
+  /** The value is not an item of the column's dictionary. */
+  outside?: boolean;
+}
+
+export interface DictionaryItem {
+  name: string;
+  /** Own color; without it the item takes its global tag color, then an automatic one. */
+  color?: TagColor;
+}
+
+/** A named, ordered list of select / multi-select options shared by columns ("dict=Name"). */
+export interface Dictionary {
+  name: string;
+  items: DictionaryItem[];
 }
 
 export type ColumnType =
@@ -54,6 +68,10 @@ export interface TableColumn {
   width?: number;
   calculation?: CalculationType;
   uniqueTags?: MultiSelectTag[];
+  /** Dictionary named by the header's "dict=" parameter, even when it no longer exists. */
+  dictionary?: string;
+  /** Item colors by lowercase name; set only while the column's dictionary exists. */
+  dictionaryColors?: Map<string, TagColor>;
   dateFormat?: DateFormatOption;
   /** Token format of a datetime column, e.g. "YYYY-MM-DD HH:mm". */
   datetimeFormat?: string;
@@ -173,6 +191,7 @@ export interface PluginSettings {
   autoDetectMultiSelect: boolean;
   multiSelectColumnNames: string[];
   customTagColors: Record<string, TagColor>;
+  dictionaries: Dictionary[];
   stickyFirstColumn: boolean;
   showRowNumbers: boolean;
   showEmptyBoardProperties: boolean;
@@ -202,6 +221,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     "Keywords",
   ],
   customTagColors: {},
+  dictionaries: [],
   stickyFirstColumn: true,
   showRowNumbers: false,
   showEmptyBoardProperties: false,

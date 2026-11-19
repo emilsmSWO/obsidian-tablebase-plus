@@ -5,6 +5,7 @@ import { normalizeDatetime } from "../core/datetime-utils";
 import { evaluateFilterStateOnRow } from "../core/filter-engine";
 import { isCellChecked } from "../core/sort-engine";
 import { parseCellTags } from "../core/tag-parser";
+import { parseColumnTags } from "../core/dictionary";
 import {
   DatabaseViewType,
   MarkdownTableData,
@@ -247,7 +248,12 @@ export class KanbanView {
           tag: {
             id: groupName,
             name: groupName,
-            color: resolveTagColor(groupName, this.options.settings.customTagColors),
+            color:
+              groupByCol?.dictionaryColors?.get(groupName.toLowerCase()) ??
+              resolveTagColor(groupName, this.options.settings.customTagColors),
+            ...(groupByCol?.dictionaryColors && !groupByCol.dictionaryColors.has(groupName.toLowerCase())
+              ? { outside: true }
+              : {}),
           },
           clickable: false,
         })
@@ -475,7 +481,7 @@ export class KanbanView {
     colIndex: number,
     cellValue: string
   ): void {
-    const tags = parseCellTags(cellValue, this.options.settings.customTagColors);
+    const tags = parseColumnTags(cellValue, col, this.options.settings.customTagColors);
 
     if (tags.length === 0) {
       const emptyBadge = propsEl.createSpan({
@@ -510,7 +516,7 @@ export class KanbanView {
     colIndex: number,
     cellValue: string
   ): void {
-    const parsed = parseCellTags(cellValue, this.options.settings.customTagColors);
+    const parsed = parseColumnTags(cellValue, col, this.options.settings.customTagColors);
     const tag = parsed[0];
 
     if (tag) {
@@ -679,7 +685,10 @@ export class KanbanView {
         await this.options.actions.onTagColorChange(tagName, color);
         this.render();
       },
-      onReloadList: () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
+      restricted: Boolean(column.dictionaryColors),
+      onReloadList: column.dictionaryColors
+        ? undefined
+        : () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
       onSelect: async (selectedTag) => {
         await this.options.actions.onCellUpdate(rowIndex, colIndex, selectedTag);
         this.render();
@@ -704,7 +713,10 @@ export class KanbanView {
         void this.options.actions.onTagColorChange(tagName, color);
         this.render();
       },
-      onReloadList: () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
+      restricted: Boolean(column.dictionaryColors),
+      onReloadList: column.dictionaryColors
+        ? undefined
+        : () => this.options.actions.onReloadList?.(colIndex) ?? Promise.resolve(),
       onSave: (newValue) => {
         void this.options.actions.onCellUpdate(rowIndex, colIndex, newValue).then(() => {
           this.render();

@@ -13,6 +13,7 @@ export function createTagBadge(options: TagBadgeOptions): HTMLElement {
   const { tag, removable = false, clickable = false, onRemove, onClick } = options;
 
   const badgeEl = createSpan({ cls: `ms-tag-badge ms-color-${tag.color}` });
+  if (tag.outside) badgeEl.classList.add("is-outside-dictionary");
   badgeEl.dataset.tagName = tag.name;
   badgeEl.dataset.tagId = tag.id;
 

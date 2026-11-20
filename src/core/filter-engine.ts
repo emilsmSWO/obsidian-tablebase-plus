@@ -9,7 +9,7 @@ import {
 import { parseCellTags } from "./tag-parser";
 import { stripCodeSpans } from "../utils/link-renderer";
 
-export function normalize(str: string): string {
+function normalize(str: string): string {
   return (str || "").trim().toLowerCase();
 }
 
@@ -123,7 +123,7 @@ export function evaluateRuleOnCell(
   }
 }
 
-export function evaluateRuleOnRow(
+function evaluateRuleOnRow(
   row: MarkdownTableRow,
   rule: FilterRule,
   columns: TableColumn[]
@@ -176,26 +176,7 @@ export function evaluateFilterStateOnRow(
   return result;
 }
 
-export function filterTableRows(
-  rows: MarkdownTableRow[],
-  filterState: TableFilterState,
-  columns: TableColumn[]
-): { matchedRows: MarkdownTableRow[]; matchedIndices: Set<number> } {
-  const matchedRows: MarkdownTableRow[] = [];
-  const matchedIndices = new Set<number>();
-
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    if (evaluateFilterStateOnRow(row, filterState, columns)) {
-      matchedRows.push(row);
-      matchedIndices.add(i);
-    }
-  }
-
-  return { matchedRows, matchedIndices };
-}
-
-export interface FilterOperatorDefinition {
+interface FilterOperatorDefinition {
   value: FilterOperator;
   label: string;
 }

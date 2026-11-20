@@ -2,7 +2,7 @@ import { CalculationType, ColumnType, MarkdownTableRow } from "../types";
 import { parseCellTags } from "./tag-parser";
 import { isCellChecked, parseCellNumber } from "./sort-engine";
 
-export interface CalculationResult {
+interface CalculationResult {
   label: string;
   value: string;
 }
@@ -118,7 +118,7 @@ export function calculateColumnSummary(
   }
 }
 
-export interface CalculationOption {
+interface CalculationOption {
   value: CalculationType;
   label: string;
 }

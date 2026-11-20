@@ -7,7 +7,7 @@ import { createColorPickerElement } from "../color-picker";
 import { ICON_CHECK, ICON_PALETTE } from "../icons";
 import { createTagBadge } from "../tag-badge";
 
-export interface TagSelectModalOptions {
+interface TagSelectModalOptions {
   app: App;
   settings: PluginSettings;
   columnName: string;

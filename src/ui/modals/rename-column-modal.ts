@@ -1,6 +1,6 @@
 import { App, Modal, Setting } from "obsidian";
 
-export interface RenameColumnModalOptions {
+interface RenameColumnModalOptions {
   app: App;
   currentName: string;
   onSave: (newName: string) => void | Promise<void>;

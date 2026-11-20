@@ -5,7 +5,7 @@ import { MarkdownTableData } from "../types";
  * `lineStart`/`lineEnd` bound the rendered section (a table block or a fenced
  * code block); `indexInSection` picks one when a section holds several tables.
  */
-export function findTableOrdinal(
+function findTableOrdinal(
   docTables: MarkdownTableData[],
   lineStart: number,
   lineEnd: number,

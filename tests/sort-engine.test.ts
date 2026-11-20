@@ -2,10 +2,24 @@ import { describe, it, expect } from "vitest";
 import {
   isCellChecked,
   parseCellNumber,
-  sortRows,
   sortRowsByRules,
 } from "../src/core/sort-engine";
 import { MarkdownTableRow, SortRule, TableColumn } from "../src/types";
+
+function sortRows(
+  rows: MarkdownTableRow[],
+  columnIndex: number,
+  direction: "asc" | "desc",
+  type: TableColumn["type"]
+): MarkdownTableRow[] {
+  const columns: TableColumn[] = Array.from({ length: columnIndex + 1 }, (_, index) => ({
+    index,
+    name: "c",
+    type,
+  }));
+  const rule: SortRule = { column: "c", columnIndex, direction };
+  return sortRowsByRules(rows, [rule], columns);
+}
 
 describe("Sort Engine", () => {
   it("should check if cells are checked checkboxes", () => {

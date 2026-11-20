@@ -547,7 +547,7 @@ export class ColumnDragController {
   }
 }
 
-export interface ColumnResizeLayout {
+interface ColumnResizeLayout {
   defaultWidth: number | undefined;
   showRowNumbers: boolean;
 }

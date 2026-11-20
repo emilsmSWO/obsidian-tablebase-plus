@@ -87,7 +87,7 @@ export interface SortRule {
   direction: SortDirection;
 }
 
-export type MultiSelectOperator =
+type MultiSelectOperator =
   | "is_one_of"
   | "is_not_one_of"
   | "contains"
@@ -98,7 +98,7 @@ export type MultiSelectOperator =
   | "contains_any"
   | "does_not_contain_any";
 
-export type TextOperator =
+type TextOperator =
   | "is_one_of"
   | "is_not_one_of"
   | "equals"
@@ -110,7 +110,7 @@ export type TextOperator =
   | "is_empty"
   | "is_not_empty";
 
-export type NumberOperator =
+type NumberOperator =
   | "equals"
   | "not_equals"
   | "greater_than"
@@ -120,7 +120,7 @@ export type NumberOperator =
   | "is_empty"
   | "is_not_empty";
 
-export type CheckboxOperator =
+type CheckboxOperator =
   | "is_checked"
   | "is_unchecked";
 

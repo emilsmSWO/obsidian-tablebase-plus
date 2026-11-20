@@ -6,7 +6,7 @@ import { appendIcon } from "../../utils/dom";
 import { ICON_CHEVRON_LEFT, ICON_CHEVRON_RIGHT } from "../icons";
 import { mountFloatingPopover } from "../popover";
 
-export interface DatePickerOptions {
+interface DatePickerOptions {
   app: App;
   anchorEl: HTMLElement;
   currentDate?: string;

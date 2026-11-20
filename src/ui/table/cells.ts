@@ -15,7 +15,7 @@ import { closeAllFloatingPopovers } from "../popover";
 import { createTagBadge } from "../tag-badge";
 import { TableViewContext } from "./types";
 
-export function isNumericCell(val: string): boolean {
+function isNumericCell(val: string): boolean {
   const trimmed = val.trim();
   if (!trimmed || trimmed === "-") return false;
   return /^[+-]?\$?\d+([.,]\d+)?%?$/.test(trimmed);

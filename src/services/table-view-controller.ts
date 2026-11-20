@@ -46,21 +46,21 @@ import { TableViewActions } from "../ui/table/types";
 import { SettingsService } from "./settings-service";
 import { TableSyncService } from "./table-sync-service";
 
-export interface CodeBlockViewParams {
+interface CodeBlockViewParams {
   sourcePath: string;
   tableData: MarkdownTableData;
   initialSource: string;
   getLineStart?: () => number | undefined;
 }
 
-export interface InlineTableViewParams {
+interface InlineTableViewParams {
   sourcePath: string;
   tableData: MarkdownTableData;
   startLine: number;
   tableIndex: number;
 }
 
-export type TableOperation =
+type TableOperation =
   | {
       kind: "cell";
       rowIndex: number;

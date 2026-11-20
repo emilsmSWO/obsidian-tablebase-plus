@@ -44,19 +44,6 @@
   box-sizing: border-box;
 }
 
-.ms-notion-kanban-container {
-  margin: 1.25rem 0;
-  border: 1px solid var(--ms-border);
-  border-radius: 8px;
-  background-color: var(--background-primary);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  font-family: var(--ms-font);
-  font-size: 14px;
-  outline: none;
-  overflow: hidden;
-  position: relative;
-}
-
 .ms-db-top-bar {
   display: flex;
   align-items: center;
@@ -226,35 +213,6 @@ input[type="text"].ms-db-search-input:focus {
   outline: none;
 }
 
-.ms-notion-database-container button.ms-db-primary-btn,
-.ms-table-toolbar-wrapper button.ms-db-primary-btn,
-button.ms-db-primary-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 4px 10px;
-  height: 28px;
-  font-size: 0.85em;
-  font-weight: 500;
-  border: none;
-  box-shadow: none;
-  outline: none;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--ms-text-muted);
-  cursor: pointer;
-  box-sizing: border-box;
-  transition: all 0.15s ease;
-}
-
-.ms-notion-database-container button.ms-db-primary-btn:hover,
-.ms-table-toolbar-wrapper button.ms-db-primary-btn:hover,
-button.ms-db-primary-btn:hover {
-  background-color: var(--ms-bg-hover);
-  color: var(--text-normal);
-}
-
 .ms-table-toolbar-wrapper {
   background: var(--ms-bg-subtle);
   border-bottom: 1px solid var(--ms-border);
@@ -298,8 +256,7 @@ button.ms-db-primary-btn:hover {
   white-space: nowrap;
 }
 
-.ms-conjunction-select,
-.ms-filter-conjunction-select {
+.ms-conjunction-select {
   width: 100%;
   height: 28px;
   padding: 4px 6px;
@@ -315,13 +272,11 @@ button.ms-db-primary-btn:hover {
   transition: border-color 0.15s ease;
 }
 
-.ms-conjunction-select:hover,
-.ms-filter-conjunction-select:hover {
+.ms-conjunction-select:hover {
   border-color: var(--ms-blue-accent);
 }
 
-.ms-rule-col-select,
-.ms-filter-column-select {
+.ms-rule-col-select {
   width: 140px;
   min-width: 140px;
   max-width: 140px;
@@ -342,13 +297,11 @@ button.ms-db-primary-btn:hover {
   transition: border-color 0.15s ease;
 }
 
-.ms-rule-col-select:hover,
-.ms-filter-column-select:hover {
+.ms-rule-col-select:hover {
   border-color: var(--ms-blue-accent);
 }
 
-.ms-rule-op-select,
-.ms-filter-operator-select {
+.ms-rule-op-select {
   width: 140px;
   min-width: 140px;
   max-width: 140px;
@@ -369,15 +322,12 @@ button.ms-db-primary-btn:hover {
   transition: border-color 0.15s ease;
 }
 
-.ms-rule-op-select:hover,
-.ms-filter-operator-select:hover {
+.ms-rule-op-select:hover {
   border-color: var(--ms-blue-accent);
 }
 
 .ms-rule-text-input,
-.ms-filter-value-input,
-input[type="text"].ms-rule-text-input,
-input[type="text"].ms-filter-value-input {
+input[type="text"].ms-rule-text-input {
   width: 200px;
   min-width: 160px;
   height: 28px;
@@ -394,23 +344,8 @@ input[type="text"].ms-filter-value-input {
 }
 
 .ms-rule-text-input:focus,
-.ms-filter-value-input:focus,
-input[type="text"].ms-rule-text-input:focus,
-input[type="text"].ms-filter-value-input:focus {
+input[type="text"].ms-rule-text-input:focus {
   border-color: var(--ms-blue-accent);
-}
-
-.ms-filter-tag-picker-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  font-size: 0.85em;
-  border: 1px solid var(--ms-border);
-  border-radius: 5px;
-  background: var(--background-primary);
-  color: var(--ms-text-muted);
-  cursor: pointer;
 }
 
 .ms-panel-footer {
@@ -421,8 +356,7 @@ input[type="text"].ms-filter-value-input:focus {
   padding-top: 4px;
 }
 
-.ms-add-filter-btn,
-.ms-add-rule-btn {
+.ms-add-filter-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -437,8 +371,7 @@ input[type="text"].ms-filter-value-input:focus {
   transition: all 0.15s ease;
 }
 
-.ms-add-filter-btn:hover,
-.ms-add-rule-btn:hover {
+.ms-add-filter-btn:hover {
   background: var(--ms-bg-hover);
   border-color: var(--ms-blue-accent);
 }
@@ -1683,21 +1616,6 @@ button.ms-db-add-row-btn:hover {
   font-weight: 500;
 }
 
-.ms-kanban-add-card-icon-btn {
-  border: none;
-  background: transparent;
-  font-size: 1.1em;
-  color: var(--ms-text-muted);
-  cursor: pointer;
-  padding: 2px 5px;
-  border-radius: 3px;
-}
-
-.ms-kanban-add-card-icon-btn:hover {
-  background: var(--ms-bg-hover);
-  color: var(--text-normal);
-}
-
 .ms-kanban-cards-list {
   padding: 8px;
   display: flex;
@@ -2191,24 +2109,6 @@ input[type="text"].ms-col-menu-name-input:focus {
   background-color: var(--ms-bg-hover);
 }
 
-.ms-color-picker-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.ms-color-dot {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 2px solid transparent;
-}
-
-.ms-color-dot.is-active {
-  border-color: var(--ms-blue-accent);
-}
-
 .ms-tag-color-btn {
   display: inline-flex;
   align-items: center;
@@ -2403,13 +2303,6 @@ input[type="text"].ms-col-menu-name-input:focus {
 .theme-dark .ms-tag-item-color-picker-wrap {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.12);
-}
-
-.ms-settings-tag-colors-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 8px 0 16px 0;
 }
 
 .ms-settings-empty-notice {
@@ -2701,18 +2594,11 @@ input[type="text"].ms-modal-name-input.is-invalid {
     display: none;
   }
 
-  body .ms-notion-database-container .ms-db-toolbar,
   body .ms-notion-database-container .ms-floating-row-handle,
-  body .ms-notion-database-container .ms-row-drag-handle,
-  body .ms-notion-database-container .ms-db-new-row-button,
-  body .ms-notion-database-container .ms-col-drag-handle,
-  body .ms-notion-database-container .ms-col-menu-trigger,
-  body .ms-notion-database-container .ms-add-col-btn,
-  body .ms-notion-database-container .ms-column-resize-handle {
+  body .ms-notion-database-container .ms-row-drag-handle {
     display: none;
   }
 }
-
 
 .ms-tag-badge.is-outside-dictionary .ms-tag-text {
   color: var(--text-error);

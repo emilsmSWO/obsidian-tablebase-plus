@@ -13,6 +13,16 @@ import {
 } from "../src/types";
 import { installObsidianDomHelpers } from "./helpers/obsidian-dom";
 
+const modalOptions = vi.hoisted(() => ({ last: undefined as undefined | { value: string; onSave: (v: string) => void; onCancel: () => void } }));
+vi.mock("../src/ui/modals/cell-editor-modal", () => ({
+  CellEditorModal: class {
+    constructor(options: NonNullable<typeof modalOptions.last>) {
+      modalOptions.last = options;
+    }
+    open(): void {}
+  },
+}));
+
 function stubLayout(el: Element): void {
   const rect = {
     top: 100,
@@ -314,7 +324,7 @@ describe("CellRenderer date cells", () => {
     td.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
     expect(renderer.isEditing).toBe(true);
 
-    const input = td.querySelector<HTMLInputElement>("input.ms-inline-cell-input");
+    const input = td.querySelector<HTMLTextAreaElement>("textarea.ms-inline-cell-input");
     expect(input).not.toBeNull();
     expect(input?.value).toBe(rawVal);
   });
@@ -331,7 +341,7 @@ describe("CellRenderer date cells", () => {
     renderer.startInlineEditing(td, 0, 0, "Original", "F");
     expect(renderer.isEditing).toBe(true);
 
-    const input = td.querySelector<HTMLInputElement>("input.ms-inline-cell-input");
+    const input = td.querySelector<HTMLTextAreaElement>("textarea.ms-inline-cell-input");
     expect(input).not.toBeNull();
     expect(input?.value).toBe("F");
 
@@ -342,5 +352,44 @@ describe("CellRenderer date cells", () => {
 
     expect(actions.onCellUpdate).toHaveBeenCalledWith(0, 0, "Fresh start");
     expect(renderer.isEditing).toBe(false);
+  });
+
+  describe("multi-line cell editing", () => {
+    function startEditing(raw: string) {
+      const textCol: TableColumn = { name: "Note", index: 0, type: "text" };
+      const row: MarkdownTableRow = { rowIndex: 0, rawLine: "", cells: [raw] };
+      const { ctx, actions, containerEl } = createContext([textCol], [row]);
+      const renderer = new CellRenderer(ctx);
+      const td = containerEl.createEl("td", { cls: "ms-db-td" });
+      renderer.render(td, row, textCol, 0);
+      renderer.startInlineEditing(td, 0, 0, raw);
+      const input = td.querySelector<HTMLTextAreaElement>("textarea.ms-inline-cell-input");
+      return { td, input, actions, renderer };
+    }
+
+    it("edits <br> as a new line", () => {
+      expect(startEditing("one<br>two").input?.value).toBe("one\ntwo");
+    });
+
+    it("stores new lines as <br> and keeps Shift+Enter from saving", () => {
+      const { input, actions } = startEditing("");
+      if (!input) throw new Error("no editor");
+      input.value = "one\ntwo";
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true }));
+      expect(actions.onCellUpdate).not.toHaveBeenCalled();
+      input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      expect(actions.onCellUpdate).toHaveBeenCalledWith(0, 0, "one<br>two");
+    });
+
+    it("saves from the larger window and ignores the blur while it is open", () => {
+      const { td, input, actions, renderer } = startEditing("text");
+      td.querySelector<HTMLElement>(".ms-inline-expand")?.click();
+      input?.dispatchEvent(new FocusEvent("blur"));
+      expect(actions.onCellUpdate).not.toHaveBeenCalled();
+      expect(renderer.isEditing).toBe(true);
+
+      modalOptions.last?.onSave("a\nb");
+      expect(actions.onCellUpdate).toHaveBeenCalledWith(0, 0, "a<br>b");
+    });
   });
 });

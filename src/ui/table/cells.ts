@@ -6,8 +6,14 @@ import { ColumnAlignment, MarkdownTableRow, TableColumn } from "../../types";
 import { appendIcon } from "../../utils/dom";
 import { attachStrictNumericInputHandlers, sanitizeNumericCellValue } from "../../utils/input";
 import { createLinkCallbacks, LinkHoverParent } from "../../utils/link-actions";
-import { renderTextWithLinks, stripCodeSpans } from "../../utils/link-renderer";
-import { ICON_TYPE_DATE } from "../icons";
+import {
+  cellTextToEditable,
+  editableToCellText,
+  renderTextWithLinks,
+  stripCodeSpans,
+} from "../../utils/link-renderer";
+import { ICON_EXPAND, ICON_TYPE_DATE } from "../icons";
+import { CellEditorModal } from "../modals/cell-editor-modal";
 import { DatePickerPopover } from "../modals/date-picker-popover";
 import { SingleSelectPopover } from "../modals/single-select-popover";
 import { TagSelectModal } from "../modals/tag-select-modal";
@@ -332,13 +338,19 @@ export class CellRenderer {
     const isNumber = col?.type === "number" || isNumericCell(stripCodeSpans(currentValue));
     const alignment = col ? resolveColumnAlignment(col) : (isNumber ? "right" : "left");
 
-    const input = td.createEl("input", {
-      type: "text",
+    const editor = td.createDiv({ cls: "ms-inline-edit" });
+    const input = editor.createEl("textarea", {
       cls: `ms-inline-cell-input is-align-${alignment} ${isNumber ? "is-number" : ""}`,
-      value: initialChar ?? currentValue,
+      attr: { rows: "1", spellcheck: "false" },
     });
-    input.setAttribute("autocomplete", "off");
-    input.setAttribute("spellcheck", "false");
+    input.value = cellTextToEditable(initialChar ?? currentValue);
+    // Grows with the wrapped text instead of scrolling a single line.
+    const fitHeight = (): void => {
+      input.style.height = "auto";
+      input.style.height = `${input.scrollHeight}px`;
+    };
+    input.addEventListener("input", fitHeight);
+    window.requestAnimationFrame(fitHeight);
 
     if (isNumber) {
       attachStrictNumericInputHandlers(input);
@@ -350,12 +362,39 @@ export class CellRenderer {
     }
 
     let settled = false;
+    let expanded = false;
+
+    if (!isNumber) {
+      const expand = editor.createEl("button", {
+        cls: "ms-inline-expand clickable-icon",
+        attr: { "aria-label": "Edit in a larger window", title: "Edit in a larger window", tabindex: "-1" },
+      });
+      appendIcon(expand, ICON_EXPAND);
+      // Keeps the focus in the field so the blur does not save the cell.
+      expand.addEventListener("mousedown", (e) => e.preventDefault());
+      expand.addEventListener("click", () => {
+        expanded = true;
+        new CellEditorModal({
+          app: this.ctx.app,
+          value: input.value,
+          onSave: (value) => {
+            input.value = value;
+            expanded = false;
+            void commit();
+          },
+          onCancel: () => {
+            expanded = false;
+            input.focus();
+          },
+        }).open();
+      });
+    }
 
     const commit = async (): Promise<void> => {
       if (settled) return;
       settled = true;
 
-      const rawValue = input.value.trim();
+      const rawValue = editableToCellText(input.value);
       const newValue = isNumber ? sanitizeNumericCellValue(rawValue) : rawValue;
 
       this.editingCell = null;
@@ -373,10 +412,14 @@ export class CellRenderer {
     };
 
     input.addEventListener("blur", () => {
-      void commit();
+      if (!expanded) void commit();
     });
 
     input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && e.shiftKey && !isNumber) {
+        // Shift+Enter inserts a line break (stored as <br>).
+        return;
+      }
       if (e.key === "Enter") {
         e.preventDefault();
         void commit();

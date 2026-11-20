@@ -1204,9 +1204,9 @@ input[type="text"].ms-rule-text-input:focus {
 }
 
 .ms-inline-cell-input,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input,
-.theme-dark .ms-db-grid-table .ms-db-td input.ms-inline-cell-input,
-.theme-light .ms-db-grid-table .ms-db-td input.ms-inline-cell-input {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input,
+.theme-dark .ms-db-grid-table .ms-db-td .ms-inline-cell-input,
+.theme-light .ms-db-grid-table .ms-db-td .ms-inline-cell-input {
   width: 100%;
   height: 100%;
   min-height: 32px;
@@ -1223,17 +1223,45 @@ input[type="text"].ms-rule-text-input:focus {
   color: inherit;
   display: block;
   box-sizing: border-box;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ms-inline-edit {
+  position: relative;
+}
+
+.ms-inline-expand {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 2px;
+  height: auto;
+  background: var(--background-primary);
+  opacity: 0.7;
+}
+
+.ms-inline-expand:hover {
+  opacity: 1;
+}
+
+.ms-cell-editor-area {
+  width: 100%;
+  resize: vertical;
+  white-space: pre-wrap;
 }
 
 .ms-inline-cell-input.is-number,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input.is-number {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input.is-number {
   font-variant-numeric: tabular-nums;
 }
 
 .ms-inline-cell-input:focus,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input:focus,
-.theme-dark .ms-db-grid-table .ms-db-td input.ms-inline-cell-input:focus,
-.theme-light .ms-db-grid-table .ms-db-td input.ms-inline-cell-input:focus {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input:focus,
+.theme-dark .ms-db-grid-table .ms-db-td .ms-inline-cell-input:focus,
+.theme-light .ms-db-grid-table .ms-db-td .ms-inline-cell-input:focus {
   border: none;
   outline: none;
   box-shadow: none;
@@ -1295,17 +1323,17 @@ input[type="text"].ms-rule-text-input:focus {
 }
 
 .ms-inline-cell-input.is-align-left,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input.is-align-left {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input.is-align-left {
   text-align: left;
 }
 
 .ms-inline-cell-input.is-align-center,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input.is-align-center {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input.is-align-center {
   text-align: center;
 }
 
 .ms-inline-cell-input.is-align-right,
-.ms-db-grid-table .ms-db-td input.ms-inline-cell-input.is-align-right {
+.ms-db-grid-table .ms-db-td .ms-inline-cell-input.is-align-right {
   text-align: right;
 }
 
@@ -1321,7 +1349,7 @@ input[type="text"].ms-rule-text-input:focus {
   text-align: right;
 }
 
-.ms-kanban-card .ms-kanban-prop-badge input.ms-inline-cell-input {
+.ms-kanban-card .ms-kanban-prop-badge .ms-inline-cell-input {
   width: auto;
   min-width: 40px;
   height: auto;
@@ -1331,7 +1359,7 @@ input[type="text"].ms-rule-text-input:focus {
   border-radius: 0;
 }
 
-.ms-kanban-card .ms-kanban-card-title input.ms-inline-cell-input {
+.ms-kanban-card .ms-kanban-card-title .ms-inline-cell-input {
   width: 100%;
   height: auto;
   min-height: unset;

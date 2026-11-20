@@ -12,7 +12,9 @@ const NAVIGATION_KEYS = new Set<string>([
 
 const SINGLE_DIGIT = /^[0-9]$/;
 
-export function attachStrictNumericInputHandlers(input: HTMLInputElement): void {
+export function attachStrictNumericInputHandlers(field: HTMLInputElement | HTMLTextAreaElement): void {
+  // Both elements share the members used here; the cast only picks one overload set.
+  const input = field as HTMLInputElement;
   input.setAttribute("inputmode", "decimal");
   input.setAttribute("placeholder", "0");
 

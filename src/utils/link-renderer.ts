@@ -205,6 +205,17 @@ export function toPlainText(input: string): string {
     .join("");
 }
 
+/** A line break inside a table cell is stored as `<br>`, the only form Markdown tables and Obsidian accept. */
+const LINE_BREAK = /<br\s*\/?>/gi;
+
+export function cellTextToEditable(text: string): string {
+  return text.replace(LINE_BREAK, "\n");
+}
+
+export function editableToCellText(text: string): string {
+  return text.trim().replace(/\s*\r?\n\s*/g, "<br>");
+}
+
 export function renderTextWithLinks(
   container: HTMLElement,
   text: string,
@@ -214,11 +225,10 @@ export function renderTextWithLinks(
 
   for (const token of tokens) {
     if (token.type === "text") {
-      if ("appendText" in container && typeof container.appendText === "function") {
-        container.appendText(token.text);
-      } else {
-        container.appendChild(container.ownerDocument.createTextNode(token.text));
-      }
+      token.text.split(LINE_BREAK).forEach((part, index) => {
+        if (index > 0) container.createEl("br");
+        container.appendChild(container.ownerDocument.createTextNode(part));
+      });
     } else if (token.type === "code") {
       // A span, not `code`: plugins that act on inline code (queries, inputs)
       // must not run on cell text.

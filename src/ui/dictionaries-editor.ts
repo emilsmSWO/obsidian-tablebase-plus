@@ -152,7 +152,7 @@ export function renderDictionariesEditor(
     if (colorPicker !== pickerKey) return;
     appendPickerRow(row, itemColor(item, global), (color: TagColor) => {
       // The global color is only the proposal; a dictionary stores a color it does not match.
-      if (color === global[item.name.trim().toLowerCase()]) delete item.color;
+      if (color === "default" || color === global[item.name.trim().toLowerCase()]) delete item.color;
       else item.color = color;
       render();
     });

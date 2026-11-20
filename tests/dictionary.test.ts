@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { App } from "obsidian";
 import {
+  dictionaryTags,
+  itemColor,
   parseColumnTags,
   parseDictParam,
   validateDictionaryName,
@@ -48,6 +50,15 @@ describe("dictionary helpers", () => {
     expect(validateItems([{ name: "A" }, { name: "a" }])).toMatch(/twice/);
     expect(validateItems([{ name: "A;B" }])).toMatch(/cannot contain/);
     expect(validateItems([{ name: " " }])).toMatch(/empty/);
+  });
+
+  it("treats the default item color as unset: global color first, then the automatic one", () => {
+    expect(itemColor({ name: "Todo", color: "default" }, { todo: "orange" })).toBe("orange");
+    const automatic = itemColor({ name: "High" }, {});
+    expect(itemColor({ name: "High", color: "default" }, {})).toBe(automatic);
+    expect(automatic).not.toBe("default");
+    const tags = dictionaryTags({ name: "S", items: [{ name: "Done", color: "green" }] }, { done: "red" });
+    expect(tags[0].color).toBe("green");
   });
 
   it("colors dictionary items own color, then global color, and flags values outside", () => {

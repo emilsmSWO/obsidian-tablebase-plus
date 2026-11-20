@@ -2,7 +2,10 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { App, Plugin } from "obsidian";
 import { SettingsService } from "../src/services/settings-service";
 import { TableBaseSettingTab } from "../src/ui/settings-tab";
+import { confirmAction } from "../src/ui/modals/confirm-modal";
 import { installObsidianDomHelpers } from "./helpers/obsidian-dom";
+
+vi.mock("../src/ui/modals/confirm-modal", () => ({ confirmAction: vi.fn() }));
 
 describe("TableBaseSettingTab", () => {
   beforeAll(() => {
@@ -187,6 +190,12 @@ describe("TableBaseSettingTab", () => {
     expect(resetBtn).toBeDefined();
 
     resetBtn?.click();
+
+    // Nothing is reset until the dialog is confirmed.
+    expect(settingsService.getSettings().showRowNumbers).toBe(true);
+    const options = vi.mocked(confirmAction).mock.calls.at(-1)?.[0];
+    expect(options?.destructive).toBe(true);
+    await options?.onConfirm();
 
     expect(settingsService.getSettings().showRowNumbers).toBe(false);
     expect(settingsService.getSettings().defaultTagFormat).toBe("comma");

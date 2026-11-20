@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { App } from "obsidian";
 import { DEFAULT_SETTINGS, MultiSelectTag } from "../src/types";
-import { createColorPickerElement } from "../src/ui/color-picker";
+import { createColorPickerElement, paintSwatch } from "../src/ui/color-picker";
 import { ConfirmModal, confirmAction } from "../src/ui/modals/confirm-modal";
 import { RenameColumnModal } from "../src/ui/modals/rename-column-modal";
 import { SingleSelectPopover } from "../src/ui/modals/single-select-popover";
@@ -91,6 +91,14 @@ describe("UI Modals and Popovers", () => {
       expect(onSelectColor).toHaveBeenCalledWith("purple");
     });
 
+    it("should show the default color swatch as a checkered no-color dot", () => {
+      const swatch = document.createElement("button");
+      paintSwatch(swatch, "default");
+      expect(swatch.classList.contains("ms-swatch-none")).toBe(true);
+      paintSwatch(swatch, "red");
+      expect(swatch.classList.contains("ms-swatch-none")).toBe(false);
+    });
+
     it("should allow custom hex color picking when enabled", () => {
       const onSelectColor = vi.fn();
       const picker = createColorPickerElement({
@@ -105,7 +113,11 @@ describe("UI Modals and Popovers", () => {
 
       if (colorInput) {
         colorInput.value = "#abcdef";
-        colorInput.dispatchEvent(new Event("change", { bubbles: true }));
+        colorInput.dispatchEvent(new Event("input", { bubbles: true }));
+        expect(onSelectColor).not.toHaveBeenCalled();
+        const accept = picker.querySelector<HTMLButtonElement>(".ms-color-accept");
+        expect(accept?.classList.contains("is-hidden")).toBe(false);
+        accept?.click();
         expect(onSelectColor).toHaveBeenCalledWith("#abcdef");
       }
     });

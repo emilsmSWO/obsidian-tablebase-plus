@@ -1,7 +1,6 @@
-import { getColorScheme } from "../core/color-palette";
 import { SettingsService } from "../services/settings-service";
 import { TagColor } from "../types";
-import { createColorPickerElement } from "./color-picker";
+import { createColorPickerElement, paintSwatch } from "./color-picker";
 
 /**
  * Editor of the global tag colors. Every change is saved at once; a tag name is stored
@@ -35,7 +34,7 @@ export function renderGlobalTagColorsEditor(host: HTMLElement, service: Settings
       cls: "ms-dict-swatch",
       attr: { "aria-label": "Tag color", title: "Tag color" },
     });
-    swatch.setCssStyles({ backgroundColor: getColorScheme(color).bg });
+    paintSwatch(swatch, color);
     swatch.addEventListener("click", () => {
       openPicker = openPicker === tag ? null : tag;
       render();
@@ -73,7 +72,7 @@ export function renderGlobalTagColorsEditor(host: HTMLElement, service: Settings
       cls: "ms-dict-swatch",
       attr: { "aria-label": "New tag color", title: "New tag color" },
     });
-    swatch.setCssStyles({ backgroundColor: getColorScheme(newColor).bg });
+    paintSwatch(swatch, newColor);
     swatch.addEventListener("click", () => {
       newPickerOpen = !newPickerOpen;
       render();

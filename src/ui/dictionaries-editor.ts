@@ -1,9 +1,8 @@
 import { App } from "obsidian";
-import { getColorScheme } from "../core/color-palette";
 import { itemColor, validateItems } from "../core/dictionary";
 import { SettingsService } from "../services/settings-service";
 import { Dictionary, DictionaryItem, TagColor } from "../types";
-import { createColorPickerElement } from "./color-picker";
+import { createColorPickerElement, paintSwatch } from "./color-picker";
 import { confirmAction } from "./modals/confirm-modal";
 
 const DELETE_WARNING =
@@ -127,7 +126,7 @@ export function renderDictionariesEditor(
       cls: "ms-dict-swatch",
       attr: { "aria-label": "Item color", title: "Item color" },
     });
-    swatch.setCssStyles({ backgroundColor: getColorScheme(itemColor(item, global)).bg });
+    paintSwatch(swatch, itemColor(item, global));
     swatch.addEventListener("click", () => {
       colorPicker = colorPicker === pickerKey ? null : pickerKey;
       render();

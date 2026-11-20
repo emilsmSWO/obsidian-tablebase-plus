@@ -5,8 +5,7 @@ import {
   INDEX_COLUMN_WIDTH,
   resolveColumnWidth,
 } from "../../core/column-width";
-import { evaluateFilterStateOnRow } from "../../core/filter-engine";
-import { sortRowsByRules } from "../../core/sort-engine";
+import { getVisibleRows } from "../../core/visible-rows";
 import { MarkdownTableRow, TableColumn } from "../../types";
 import { appendIcon, appendIconLabel, setFixedWidth } from "../../utils/dom";
 import {
@@ -54,10 +53,7 @@ export class TableGrid {
 
   public getVisibleRows(): MarkdownTableRow[] {
     const { tableData, filterState, columns } = this.ctx;
-    const filtered = tableData.rows.filter((row) =>
-      evaluateFilterStateOnRow(row, filterState, columns)
-    );
-    return sortRowsByRules(filtered, filterState.sortRules ?? [], columns);
+    return getVisibleRows(tableData.rows, filterState, columns, true);
   }
 
   public render(container: HTMLElement): void {

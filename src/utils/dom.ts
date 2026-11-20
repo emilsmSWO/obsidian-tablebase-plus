@@ -57,6 +57,22 @@ export function appendIconLabel(
   return appendLabel(parent, label, options.labelClass);
 }
 
+export function createMenuItem(
+  parent: HTMLElement,
+  icon: string,
+  label: string,
+  onClick: () => void,
+  options: { danger?: boolean; title?: string } = {}
+): HTMLElement {
+  const item = parent.createDiv({
+    cls: `ms-menu-item${options.danger ? " is-danger" : ""}`,
+  });
+  appendIconLabel(item, icon, label);
+  if (options.title) item.setAttribute("title", options.title);
+  item.addEventListener("click", onClick);
+  return item;
+}
+
 export function setFixedWidth(target: HTMLElement, pixels: number): void {
   const value = `${pixels}px`;
   if (typeof target.setCssStyles === "function") {

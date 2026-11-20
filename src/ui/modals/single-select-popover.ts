@@ -1,7 +1,7 @@
 import { App } from "obsidian";
 import { parseCellTags } from "../../core/tag-parser";
 import { MultiSelectTag, PluginSettings, TagColor } from "../../types";
-import { appendIcon, appendIconLabel } from "../../utils/dom";
+import { appendIcon, createMenuItem } from "../../utils/dom";
 import { createColorPickerElement } from "../color-picker";
 import { ICON_CHECK, ICON_CLEAR, ICON_RELOAD, ICON_PALETTE, ICON_PLUS, ICON_SEARCH } from "../icons";
 import { mountFloatingPopover } from "../popover";
@@ -161,21 +161,28 @@ export class SingleSelectPopover {
 
     container.createDiv({ cls: "ms-menu-divider" });
     if (this.currentTagName) {
-      const clearItem = container.createDiv({ cls: "ms-menu-item is-danger" });
-      appendIconLabel(clearItem, ICON_CLEAR, "Clear selection");
-      clearItem.addEventListener("click", () => {
-        void this.selectOption("");
-      });
+      createMenuItem(
+        container,
+        ICON_CLEAR,
+        "Clear selection",
+        () => {
+          void this.selectOption("");
+        },
+        { danger: true }
+      );
     }
 
     const { onReloadList } = this.options;
     if (!onReloadList) return;
-    const reloadItem = container.createDiv({ cls: "ms-menu-item" });
-    appendIconLabel(reloadItem, ICON_RELOAD, "Reload list");
-    reloadItem.setAttribute("title", "Rebuild the option list from the values in the table");
-    reloadItem.addEventListener("click", () => {
-      void onReloadList().then(() => this.close());
-    });
+    createMenuItem(
+      container,
+      ICON_RELOAD,
+      "Reload list",
+      () => {
+        void onReloadList().then(() => this.close());
+      },
+      { title: "Rebuild the option list from the values in the table" }
+    );
   }
 
   private renderOptionRow(container: HTMLElement, tag: MultiSelectTag): void {

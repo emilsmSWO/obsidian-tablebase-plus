@@ -78,3 +78,46 @@ export function paintSwatch(el: HTMLElement, color: TagColor): void {
   el.classList.toggle("ms-swatch-none", none);
   if (!none) el.setCssStyles({ backgroundColor: getColorScheme(color).bg });
 }
+
+/** Round color button of a settings editor row; clicking it opens the row's picker. */
+export function createSwatchButton(
+  parent: HTMLElement,
+  color: TagColor,
+  label: string,
+  onClick: () => void
+): HTMLButtonElement {
+  const swatch = parent.createEl("button", {
+    cls: "ms-dict-swatch",
+    attr: { "aria-label": label, title: label },
+  });
+  paintSwatch(swatch, color);
+  swatch.addEventListener("click", onClick);
+  return swatch;
+}
+
+/** Row below an editor line that holds a color picker. */
+export function appendPickerRow(
+  row: HTMLElement,
+  currentColor: TagColor,
+  onSelectColor: (color: TagColor) => void | Promise<void>
+): void {
+  row.createDiv({ cls: "ms-dict-picker" }).appendChild(
+    createColorPickerElement({ currentColor, onSelectColor })
+  );
+}
+
+export function createIconButton(
+  parent: HTMLElement,
+  label: string,
+  text: string,
+  onClick: () => void,
+  options: { disabled?: boolean; title?: string } = {}
+): void {
+  const button = parent.createEl("button", {
+    cls: "clickable-icon",
+    text,
+    attr: { "aria-label": label, title: options.title ?? label },
+  });
+  button.disabled = options.disabled ?? false;
+  button.addEventListener("click", onClick);
+}

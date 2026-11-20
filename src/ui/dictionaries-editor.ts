@@ -2,7 +2,7 @@ import { App } from "obsidian";
 import { itemColor, validateItems } from "../core/dictionary";
 import { SettingsService } from "../services/settings-service";
 import { Dictionary, DictionaryItem, TagColor } from "../types";
-import { createColorPickerElement, paintSwatch } from "./color-picker";
+import { appendPickerRow, createIconButton, createSwatchButton } from "./color-picker";
 import { confirmAction } from "./modals/confirm-modal";
 
 const DELETE_WARNING =
@@ -122,12 +122,7 @@ export function renderDictionariesEditor(
     const line = row.createDiv({ cls: "ms-dict-item-line" });
     const global = service.getSettings().customTagColors;
 
-    const swatch = line.createEl("button", {
-      cls: "ms-dict-swatch",
-      attr: { "aria-label": "Item color", title: "Item color" },
-    });
-    paintSwatch(swatch, itemColor(item, global));
-    swatch.addEventListener("click", () => {
+    createSwatchButton(line, itemColor(item, global), "Item color", () => {
       colorPicker = colorPicker === pickerKey ? null : pickerKey;
       render();
     });
@@ -146,35 +141,21 @@ export function renderDictionariesEditor(
       colorPicker = null;
       render();
     };
-    const iconButton = (label: string, text: string, onClick: () => void, disabled = false): void => {
-      const button = line.createEl("button", {
-        cls: "clickable-icon",
-        text,
-        attr: { "aria-label": label, title: label },
-      });
-      button.disabled = disabled;
-      button.addEventListener("click", onClick);
-    };
-    iconButton("Move up", "↑", () => move(-1), index === 0);
-    iconButton("Move down", "↓", () => move(1), index === draft.length - 1);
-    iconButton("Delete item", "✕", () => {
+    createIconButton(line, "Move up", "↑", () => move(-1), { disabled: index === 0 });
+    createIconButton(line, "Move down", "↓", () => move(1), { disabled: index === draft.length - 1 });
+    createIconButton(line, "Delete item", "✕", () => {
       draft.splice(index, 1);
       colorPicker = null;
       render();
     });
 
     if (colorPicker !== pickerKey) return;
-    row.createDiv({ cls: "ms-dict-picker" }).appendChild(
-      createColorPickerElement({
-        currentColor: itemColor(item, global),
-        onSelectColor: (color: TagColor) => {
-          // The global color is only the proposal; a dictionary stores a color it does not match.
-          if (color === global[item.name.trim().toLowerCase()]) delete item.color;
-          else item.color = color;
-          render();
-        },
-      })
-    );
+    appendPickerRow(row, itemColor(item, global), (color: TagColor) => {
+      // The global color is only the proposal; a dictionary stores a color it does not match.
+      if (color === global[item.name.trim().toLowerCase()]) delete item.color;
+      else item.color = color;
+      render();
+    });
   };
 
   const renderAddItem = (

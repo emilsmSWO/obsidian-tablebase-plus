@@ -91,25 +91,29 @@ function compareByType(
   }
 }
 
-function compareRowsByColumn(
-  a: MarkdownTableRow,
-  b: MarkdownTableRow,
-  columnIndex: number,
+interface SortKey {
+  value: string;
+  empty: boolean;
+}
+
+function toSortKey(row: MarkdownTableRow, columnIndex: number): SortKey {
+  const value = stripCodeSpans(row.cells[columnIndex] || "");
+  return { value, empty: isEmptyCell(value) };
+}
+
+function compareSortKeys(
+  a: SortKey,
+  b: SortKey,
   direction: SortDirection,
-  columnType: TableColumn["type"] = "text",
+  columnType: TableColumn["type"],
   datetimeFormat?: string
 ): number {
-  const valA = stripCodeSpans(a.cells[columnIndex] || "");
-  const valB = stripCodeSpans(b.cells[columnIndex] || "");
-
-  const isEmptyA = isEmptyCell(valA);
-  const isEmptyB = isEmptyCell(valB);
-  if (isEmptyA && isEmptyB) return 0;
-  if (isEmptyA) return 1;
-  if (isEmptyB) return -1;
+  if (a.empty && b.empty) return 0;
+  if (a.empty) return 1;
+  if (b.empty) return -1;
 
   const factor = direction === "asc" ? 1 : -1;
-  return compareByType(valA, valB, columnType, datetimeFormat) * factor;
+  return compareByType(a.value, b.value, columnType, datetimeFormat) * factor;
 }
 
 export function sortRowsByRules(
@@ -121,13 +125,19 @@ export function sortRowsByRules(
     return rows;
   }
 
-  return [...rows].sort((a, b) => {
-    for (const rule of sortRules) {
+  // Sort keys are computed once per row instead of on every comparison.
+  const keyed = rows.map((row) => ({
+    row,
+    keys: sortRules.map((rule) => toSortKey(row, rule.columnIndex)),
+  }));
+
+  keyed.sort((a, b) => {
+    for (let i = 0; i < sortRules.length; i++) {
+      const rule = sortRules[i];
       const column = columns[rule.columnIndex];
-      const result = compareRowsByColumn(
-        a,
-        b,
-        rule.columnIndex,
+      const result = compareSortKeys(
+        a.keys[i],
+        b.keys[i],
         rule.direction,
         column ? column.type : "text",
         column?.datetimeFormat
@@ -138,4 +148,5 @@ export function sortRowsByRules(
     }
     return 0;
   });
+  return keyed.map((entry) => entry.row);
 }

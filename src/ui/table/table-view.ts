@@ -112,7 +112,12 @@ export class NotionTableView implements Disposable, TableViewContext {
   }
 
   public updateSettings(settings: PluginSettings): void {
+    const dateFormatChanged = this.options.settings.dateFormat !== settings.dateFormat;
     this.options.settings = settings;
+    if (!dateFormatChanged) {
+      this.render();
+      return;
+    }
     this.options.columns = this.options.columns.map((col) => {
       const rawHeader = this.tableData.headers[col.index] || "";
       const isDateCol =

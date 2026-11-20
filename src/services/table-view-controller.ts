@@ -38,6 +38,7 @@ import {
   ColumnAlignment,
   MarkdownTableData,
   MarkdownTableRow,
+  PluginSettings,
   SortRule,
   TableColumn,
 } from "../types";
@@ -463,8 +464,16 @@ export class TableViewController {
       actions,
     });
 
+    // Lists only depend on the dictionaries and global tag colors, so other settings skip the rebuild.
+    const listSource = (value: PluginSettings): string =>
+      JSON.stringify([value.dictionaries, value.customTagColors]);
+    let lastListSource = listSource(settings);
     const unsubscribe = this.settingsService.subscribe((updatedSettings) => {
-      if (columns.some((column) => column.dictionary)) this.rebuildLists(tableData, columns);
+      const source = listSource(updatedSettings);
+      if (source !== lastListSource) {
+        lastListSource = source;
+        if (columns.some((column) => column.dictionary)) this.rebuildLists(tableData, columns);
+      }
       view?.updateSettings(updatedSettings);
     });
     view.registry.addFn(unsubscribe);

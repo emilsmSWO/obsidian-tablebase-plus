@@ -46,7 +46,8 @@ export function validateItems(items: DictionaryItem[]): string | null {
 }
 
 export function itemColor(item: DictionaryItem, customColors?: Record<string, TagColor>): TagColor {
-  return item.color ?? resolveTagColor(item.name, customColors);
+  // "default" means no own color: fall back to the global tag color, then to the automatic one.
+  return item.color && item.color !== "default" ? item.color : resolveTagColor(item.name, customColors);
 }
 
 export function dictionaryColors(

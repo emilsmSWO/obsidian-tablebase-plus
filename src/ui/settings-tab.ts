@@ -6,6 +6,7 @@ import { SettingsService } from "../services/settings-service";
 import { DateFormatOption, DEFAULT_SETTINGS, TagFormat } from "../types";
 import { renderDictionariesEditor } from "./dictionaries-editor";
 import { renderGlobalTagColorsEditor } from "./global-tag-colors-editor";
+import { confirmAction } from "./modals/confirm-modal";
 
 const MAX_HEIGHT_DESC =
   "Tables taller than this share of the window height scroll inside it, with the header kept in view. Set 0 for no limit.";
@@ -194,11 +195,7 @@ export class TableBaseSettingTab extends PluginSettingTab {
       {
         name: "Restore default settings",
         desc: "Reset all plugin settings back to default values.",
-        action: () => {
-          void this.settingsService.resetDefaults().then(() => {
-            this.refresh();
-          });
-        },
+        action: () => this.confirmReset(),
       },
     ];
   }
@@ -493,10 +490,22 @@ export class TableBaseSettingTab extends PluginSettingTab {
         } else {
           btn.setClass("mod-warning");
         }
-        btn.onClick(async () => {
-          await this.settingsService.resetDefaults();
-          this.refresh();
-        });
+        btn.onClick(() => this.confirmReset());
       });
+  }
+
+  private confirmReset(): void {
+    confirmAction({
+      app: this.app,
+      title: "Restore default settings?",
+      message:
+        "All plugin settings, including dictionaries, global tag colors and saved list orders, will be reset to their defaults. Table text in your notes is not changed. This cannot be undone.",
+      confirmText: "Restore defaults",
+      destructive: true,
+      onConfirm: async () => {
+        await this.settingsService.resetDefaults();
+        this.refresh();
+      },
+    });
   }
 }

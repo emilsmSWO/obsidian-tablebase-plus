@@ -7,6 +7,13 @@ describe("link-renderer", () => {
     installObsidianDomHelpers(window as Window & typeof globalThis);
   });
 
+  it("should render <br> as a line break but keep it literal in code spans", () => {
+    const el = document.createElement("div");
+    renderTextWithLinks(el, "one<br>two `a<br>b`");
+    expect(el.querySelectorAll("br")).toHaveLength(1);
+    expect(el.textContent).toBe("onetwo a<br>b");
+  });
+
   it("should return empty array for empty or whitespace text", () => {
     expect(parseLinkTokens("")).toEqual([]);
   });

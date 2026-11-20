@@ -94,6 +94,7 @@ A dictionary is a named, ordered list of options with colors, defined once in th
 ![Interactive Table View](assets/table-demo.gif)
 
 * **Edit Cells**: Double-click any cell or press `Enter` to edit text, numbers, dates, or tags.
+* **Multi-line Cells**: The cell editor wraps long text. `Shift+Enter` adds a line break, stored in the Markdown as `<br>` (humans and LLMs can write `<br>` directly). The ⤢ button opens a larger editing window (`Ctrl/Cmd+Enter` saves).
 * **Clickable Links**: Click `[Markdown links](url)` (also to notes: `[text](Note.md)`, `[text](#Heading)`, `[text](<My Note.md>)`; `obsidian://`, `mailto:` and `tel:` work too), raw URLs (`https://...`), or `[[WikiLinks]]` (with `#Heading`, `^block` and `[[Page\|alias]]`) to open them in your browser or notes. Ctrl/Cmd+click opens a note in a new tab, hovering shows the preview, and links to missing notes are dimmed.
 * **Reorder Rows**: Hover over any row and drag the floating handle (`⠿`) in the left gutter to move rows up or down.
 * **Reorder Columns**: Drag any column header left or right with live drop indicators (`before` / `after`).

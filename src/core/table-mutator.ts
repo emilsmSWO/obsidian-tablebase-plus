@@ -124,6 +124,24 @@ export function stripTypeAnnotation(name: string): string {
   return name.replace(TYPE_ANNOTATION_REGEX, "").trim();
 }
 
+/** Rewrites a column's header from its current state; `explicit` defaults to "was annotated before". */
+function rewriteColumnHeader(
+  tableData: MarkdownTableData,
+  col: TableColumn,
+  colIndex: number,
+  explicit = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "")
+): void {
+  if (colIndex < 0 || colIndex >= tableData.headers.length) return;
+  tableData.headers[colIndex] = formatColumnHeader(col.name, col.type, col.dateFormat, {
+    explicit,
+    calculation: col.calculation,
+    width: col.width,
+    datetimeFormat: col.datetimeFormat,
+    autoUpdate: col.autoUpdate,
+    dictionary: col.dictionary,
+  });
+}
+
 export function formatColumnHeader(
   name: string,
   type: ColumnType,
@@ -362,17 +380,7 @@ export function applyChangeColumnType(
   const cleanName = stripTypeAnnotation(col.name);
   col.name = cleanName;
 
-  const headerText = formatColumnHeader(cleanName, newType, col.dateFormat, {
-    explicit: true,
-    calculation: col.calculation,
-    width: col.width,
-    datetimeFormat: col.datetimeFormat,
-    autoUpdate: col.autoUpdate,
-    dictionary: col.dictionary,
-  });
-  if (colIndex >= 0 && colIndex < tableData.headers.length) {
-    tableData.headers[colIndex] = headerText;
-  }
+  rewriteColumnHeader(tableData, col, colIndex, true);
 }
 
 /** Turns "datetime:autoupdate" on or off, making the column a datetime one if it is not yet. */
@@ -392,14 +400,7 @@ export function applyChangeColumnAutoUpdate(
   if (enabled) col.autoUpdate = true;
   else delete col.autoUpdate;
 
-  tableData.headers[colIndex] = formatColumnHeader(col.name, "datetime", undefined, {
-    explicit: true,
-    calculation: col.calculation,
-    width: col.width,
-    datetimeFormat: col.datetimeFormat,
-    autoUpdate: col.autoUpdate,
-    dictionary: col.dictionary,
-  });
+  rewriteColumnHeader(tableData, col, colIndex, true);
 }
 
 /** Binds a select or multi-select column to a dictionary, or back to a custom list (undefined). */
@@ -416,13 +417,7 @@ export function applyChangeColumnDictionary(
   else delete col.dictionary;
   delete col.dictionaryColors;
 
-  const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
-  tableData.headers[colIndex] = formatColumnHeader(col.name, col.type, col.dateFormat, {
-    explicit: hadExplicitType,
-    calculation: col.calculation,
-    width: col.width,
-    dictionary: col.dictionary,
-  });
+  rewriteColumnHeader(tableData, col, colIndex);
 }
 
 export function applyChangeColumnDateFormat(
@@ -494,19 +489,7 @@ export function applyChangeColumnCalculation(
     col.calculation = calculation;
   }
 
-  const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
-  const headerText = formatColumnHeader(col.name, col.type, col.dateFormat, {
-    explicit: hadExplicitType,
-    calculation: col.calculation,
-    width: col.width,
-    datetimeFormat: col.datetimeFormat,
-    autoUpdate: col.autoUpdate,
-    dictionary: col.dictionary,
-  });
-
-  if (colIndex >= 0 && colIndex < tableData.headers.length) {
-    tableData.headers[colIndex] = headerText;
-  }
+  rewriteColumnHeader(tableData, col, colIndex);
 }
 
 export function applyChangeColumnWidth(
@@ -520,18 +503,7 @@ export function applyChangeColumnWidth(
 
   col.width = clampColumnWidth(width);
 
-  const hadExplicitType = TYPE_ANNOTATION_REGEX.test(tableData.headers[colIndex] ?? "");
-  const headerText = formatColumnHeader(col.name, col.type, col.dateFormat, {
-    explicit: hadExplicitType,
-    calculation: col.calculation,
-    width: col.width,
-    datetimeFormat: col.datetimeFormat,
-    autoUpdate: col.autoUpdate,
-    dictionary: col.dictionary,
-  });
-  if (colIndex >= 0 && colIndex < tableData.headers.length) {
-    tableData.headers[colIndex] = headerText;
-  }
+  rewriteColumnHeader(tableData, col, colIndex);
 }
 
 export function applyChangeColumnAlignment(

@@ -2,7 +2,7 @@ import { Notice } from "obsidian";
 import { getCalculationOptionsForColumnType } from "../../core/calculation-engine";
 import { exportTableToCSV } from "../../core/markdown-parser";
 import { ColumnAlignment, TableColumn } from "../../types";
-import { appendIcon, appendIconLabel } from "../../utils/dom";
+import { appendIcon, createMenuItem } from "../../utils/dom";
 import {
   COLUMN_TYPE_DEFINITIONS,
   getColumnTypeIcon,
@@ -49,15 +49,16 @@ function addMenuItem(
   onClick: () => void,
   options: { danger?: boolean } = {}
 ): HTMLElement {
-  const item = menu.createDiv({
-    cls: `ms-menu-item${options.danger ? " is-danger" : ""}`,
-  });
-  appendIconLabel(item, icon, label);
-  item.addEventListener("click", () => {
-    onClick();
-    menu.remove();
-  });
-  return item;
+  return createMenuItem(
+    menu,
+    icon,
+    label,
+    () => {
+      onClick();
+      menu.remove();
+    },
+    options
+  );
 }
 
 function addCheckableItem(
@@ -233,9 +234,7 @@ export class TableMenus {
     const buildCsv = (): string =>
       exportTableToCSV(this.ctx.tableData, this.ctx.filterState.hiddenColumnIndices ?? []);
 
-    const copyItem = menu.createDiv({ cls: "ms-menu-item" });
-    appendIconLabel(copyItem, ICON_COPY, "Copy table as CSV");
-    copyItem.addEventListener("click", () => {
+    createMenuItem(menu, ICON_COPY, "Copy table as CSV", () => {
       void (async () => {
         try {
           await navigator.clipboard.writeText(buildCsv());
@@ -247,9 +246,7 @@ export class TableMenus {
       })();
     });
 
-    const downloadItem = menu.createDiv({ cls: "ms-menu-item" });
-    appendIconLabel(downloadItem, ICON_DOWNLOAD, "Download CSV file");
-    downloadItem.addEventListener("click", () => {
+    createMenuItem(menu, ICON_DOWNLOAD, "Download CSV file", () => {
       const blob = new Blob([buildCsv()], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = createEl("a");

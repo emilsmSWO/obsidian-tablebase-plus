@@ -2,7 +2,7 @@ import { App } from "obsidian";
 import { resolveTagColor } from "../core/color-palette";
 import { formatDateByOption, parseAnyDate } from "../core/date-utils";
 import { normalizeDatetime } from "../core/datetime-utils";
-import { evaluateFilterStateOnRow } from "../core/filter-engine";
+import { getVisibleRows } from "../core/visible-rows";
 import { isCellChecked } from "../core/sort-engine";
 import { parseCellTags } from "../core/tag-parser";
 import { parseColumnTags } from "../core/dictionary";
@@ -14,7 +14,7 @@ import {
   TableColumn,
   TableFilterState,
 } from "../types";
-import { appendIcon, appendIconLabel } from "../utils/dom";
+import { appendIcon, appendIconLabel, createMenuItem } from "../utils/dom";
 import { attachStrictNumericInputHandlers, sanitizeNumericCellValue } from "../utils/input";
 import { createLinkCallbacks, LinkHoverParent } from "../utils/link-actions";
 import { LinkRenderCallbacks, renderTextWithLinks, stripCodeSpans } from "../utils/link-renderer";
@@ -162,10 +162,7 @@ export class KanbanView {
 
   private getVisibleRows(): MarkdownTableRow[] {
     const { tableData, filterState, columns } = this.options;
-    if (!filterState) return tableData.rows;
-    return tableData.rows.filter((row) =>
-      evaluateFilterStateOnRow(row, filterState, columns)
-    );
+    return getVisibleRows(tableData.rows, filterState, columns);
   }
 
   private groupRows(groupByCol: TableColumn | undefined): Map<string, MarkdownTableRow[]> {
@@ -418,26 +415,24 @@ export class KanbanView {
   ): void {
     const menu = createDiv({ cls: "ms-col-header-menu" });
 
-    const editItem = menu.createDiv({ cls: "ms-menu-item" });
-    appendIconLabel(editItem, ICON_EDIT, "Edit title");
-    editItem.addEventListener("click", () => {
+    createMenuItem(menu, ICON_EDIT, "Edit title", () => {
       menu.remove();
       this.startTitleEdit(titleEl, row);
     });
-
-    const duplicateItem = menu.createDiv({ cls: "ms-menu-item" });
-    appendIconLabel(duplicateItem, ICON_DUPLICATE, "Duplicate card");
-    duplicateItem.addEventListener("click", () => {
+    createMenuItem(menu, ICON_DUPLICATE, "Duplicate card", () => {
       void this.options.actions.onAddRow(row.rowIndex + 1, [...row.cells]);
       menu.remove();
     });
-
-    const deleteItem = menu.createDiv({ cls: "ms-menu-item is-danger" });
-    appendIconLabel(deleteItem, ICON_TRASH, "Delete card");
-    deleteItem.addEventListener("click", () => {
-      menu.remove();
-      void this.options.actions.onDeleteRow(row.rowIndex);
-    });
+    createMenuItem(
+      menu,
+      ICON_TRASH,
+      "Delete card",
+      () => {
+        menu.remove();
+        void this.options.actions.onDeleteRow(row.rowIndex);
+      },
+      { danger: true }
+    );
 
     mountFloatingPopover({ anchorEl: card, popoverEl: menu, offsetTop: 2 });
   }

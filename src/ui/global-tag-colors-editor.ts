@@ -1,6 +1,6 @@
 import { SettingsService } from "../services/settings-service";
 import { TagColor } from "../types";
-import { createColorPickerElement, paintSwatch } from "./color-picker";
+import { appendPickerRow, createIconButton, createSwatchButton } from "./color-picker";
 
 /**
  * Editor of the global tag colors. Every change is saved at once; a tag name is stored
@@ -30,50 +30,36 @@ export function renderGlobalTagColorsEditor(host: HTMLElement, service: Settings
   const renderRow = (tag: string, color: TagColor): void => {
     const row = host.createDiv({ cls: "ms-dict-item" });
     const line = row.createDiv({ cls: "ms-dict-item-line" });
-    const swatch = line.createEl("button", {
-      cls: "ms-dict-swatch",
-      attr: { "aria-label": "Tag color", title: "Tag color" },
-    });
-    paintSwatch(swatch, color);
-    swatch.addEventListener("click", () => {
+    createSwatchButton(line, color, "Tag color", () => {
       openPicker = openPicker === tag ? null : tag;
       render();
     });
     line.createSpan({ cls: "ms-gtc-name", text: tag });
-    const remove = line.createEl("button", {
-      cls: "clickable-icon",
-      text: "✕",
-      attr: { "aria-label": "Delete tag color", title: "Reset to automatic color" },
-    });
-    remove.addEventListener("click", () => {
-      void service.removeTagColor(tag).then(() => {
-        openPicker = null;
-        render();
-      });
-    });
-
-    if (openPicker !== tag) return;
-    row.createDiv({ cls: "ms-dict-picker" }).appendChild(
-      createColorPickerElement({
-        currentColor: color,
-        onSelectColor: async (picked: TagColor) => {
-          await service.setTagColor(tag, picked);
+    createIconButton(
+      line,
+      "Delete tag color",
+      "✕",
+      () => {
+        void service.removeTagColor(tag).then(() => {
           openPicker = null;
           render();
-        },
-      })
+        });
+      },
+      { title: "Reset to automatic color" }
     );
+
+    if (openPicker !== tag) return;
+    appendPickerRow(row, color, async (picked: TagColor) => {
+      await service.setTagColor(tag, picked);
+      openPicker = null;
+      render();
+    });
   };
 
   const renderAddRow = (): void => {
     const row = host.createDiv({ cls: "ms-dict-item" });
     const line = row.createDiv({ cls: "ms-dict-add" });
-    const swatch = line.createEl("button", {
-      cls: "ms-dict-swatch",
-      attr: { "aria-label": "New tag color", title: "New tag color" },
-    });
-    paintSwatch(swatch, newColor);
-    swatch.addEventListener("click", () => {
+    createSwatchButton(line, newColor, "New tag color", () => {
       newPickerOpen = !newPickerOpen;
       render();
     });
@@ -103,16 +89,11 @@ export function renderGlobalTagColorsEditor(host: HTMLElement, service: Settings
 
     if (error) row.createDiv({ cls: "ms-dict-status ms-dict-error", text: error });
     if (!newPickerOpen) return;
-    row.createDiv({ cls: "ms-dict-picker" }).appendChild(
-      createColorPickerElement({
-        currentColor: newColor,
-        onSelectColor: (picked: TagColor) => {
-          newColor = picked;
-          newPickerOpen = false;
-          render();
-        },
-      })
-    );
+    appendPickerRow(row, newColor, (picked: TagColor) => {
+      newColor = picked;
+      newPickerOpen = false;
+      render();
+    });
   };
 
   render();

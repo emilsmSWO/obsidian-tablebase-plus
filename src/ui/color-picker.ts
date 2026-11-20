@@ -1,4 +1,4 @@
-import { COLOR_LIST } from "../core/color-palette";
+import { COLOR_LIST, getColorScheme } from "../core/color-palette";
 import { TagColor } from "../types";
 
 export interface ColorPickerOptions {
@@ -48,22 +48,33 @@ export function createColorPickerElement(options: ColorPickerOptions): HTMLEleme
       e.stopPropagation();
     });
 
-    colorInput.addEventListener("input", (e) => {
+    // The native dialog fires "input" on every click; picking is final only after "Accept".
+    let pending: string | null = null;
+    const accept = container.createEl("button", {
+      cls: "ms-color-accept mod-cta is-hidden",
+      text: "Accept",
+    });
+    accept.addEventListener("click", (e) => {
       e.stopPropagation();
-      const val = (e.target as HTMLInputElement).value;
-      if (val) {
-        void onSelectColor(val);
-      }
+      e.preventDefault();
+      if (pending) void onSelectColor(pending);
     });
 
-    colorInput.addEventListener("change", (e) => {
+    colorInput.addEventListener("input", (e) => {
       e.stopPropagation();
-      const val = (e.target as HTMLInputElement).value;
-      if (val) {
-        void onSelectColor(val);
-      }
+      pending = (e.target as HTMLInputElement).value || null;
+      if (!pending) return;
+      customWrapper.style.setProperty("--ms-custom-preview", pending);
+      accept.classList.remove("is-hidden");
     });
   }
 
   return container;
+}
+
+/** Fills a round color swatch; the "default" color shows a checkered "no color" pattern. */
+export function paintSwatch(el: HTMLElement, color: TagColor): void {
+  const none = color === "default";
+  el.classList.toggle("ms-swatch-none", none);
+  if (!none) el.setCssStyles({ backgroundColor: getColorScheme(color).bg });
 }

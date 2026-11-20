@@ -232,9 +232,17 @@ export class TableViewController {
       this.watchEditorScroll(sourcePath);
       const previousHeaders = [...tableData.headers];
       const operation = mutate();
-      if (!operation) return;
+      if (!operation) {
+        this.stopWatchingEditorScroll(sourcePath);
+        return;
+      }
 
-      await persist(operation, previousHeaders);
+      try {
+        await persist(operation, previousHeaders);
+      } catch (error) {
+        this.stopWatchingEditorScroll(sourcePath);
+        throw error;
+      }
       this.restoreEditorScroll(sourcePath);
       if (typeof window !== "undefined") {
         let frames = 0;
@@ -498,7 +506,9 @@ export class TableViewController {
     if (typeof document === "undefined" || typeof MutationObserver === "undefined") return;
     this.stopWatchingEditorScroll(sourcePath);
     const observer = new MutationObserver(() => this.restoreEditorScroll(sourcePath));
-    observer.observe(document.body, { childList: true, subtree: true });
+    // The leaf is enough: the editor (and a replaced scroller) lives inside it.
+    const root = document.querySelector(".workspace-leaf.mod-active") ?? document.body;
+    observer.observe(root, { childList: true, subtree: true });
     this.editorScrollObservers.set(sourcePath, observer);
   }
 
@@ -515,8 +525,8 @@ export class TableViewController {
       ".workspace-leaf.mod-active .cm-scroller"
     );
     if (!scroller) return;
-    scroller.scrollTop = position.top;
-    scroller.scrollLeft = position.left;
+    if (scroller.scrollTop !== position.top) scroller.scrollTop = position.top;
+    if (scroller.scrollLeft !== position.left) scroller.scrollLeft = position.left;
   }
 }
 

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   evaluateRuleOnCell,
-  filterTableRows,
+  evaluateFilterStateOnRow,
   getFilterOperatorsForColumnType,
   parseFilterValues,
 } from "../src/core/filter-engine";
@@ -11,6 +11,10 @@ import {
   TableColumn,
   TableFilterState,
 } from "../src/types";
+
+function filterTableRows(rows: MarkdownTableRow[], state: TableFilterState, columns: TableColumn[]) {
+  return { matchedRows: rows.filter((row) => evaluateFilterStateOnRow(row, state, columns)) };
+}
 
 describe("Table Filter Engine", () => {
   const columns: TableColumn[] = [

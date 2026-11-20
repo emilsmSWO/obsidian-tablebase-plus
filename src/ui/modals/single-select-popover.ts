@@ -7,7 +7,7 @@ import { ICON_CHECK, ICON_CLEAR, ICON_RELOAD, ICON_PALETTE, ICON_PLUS, ICON_SEAR
 import { mountFloatingPopover } from "../popover";
 import { createTagBadge } from "../tag-badge";
 
-export interface SingleSelectPopoverOptions {
+interface SingleSelectPopoverOptions {
   app: App;
   anchorEl: HTMLElement;
   columnName: string;

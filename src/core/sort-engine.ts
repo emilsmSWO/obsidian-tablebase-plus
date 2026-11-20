@@ -91,7 +91,7 @@ function compareByType(
   }
 }
 
-export function compareRowsByColumn(
+function compareRowsByColumn(
   a: MarkdownTableRow,
   b: MarkdownTableRow,
   columnIndex: number,
@@ -110,17 +110,6 @@ export function compareRowsByColumn(
 
   const factor = direction === "asc" ? 1 : -1;
   return compareByType(valA, valB, columnType, datetimeFormat) * factor;
-}
-
-export function sortRows(
-  rows: MarkdownTableRow[],
-  columnIndex: number,
-  direction: SortDirection,
-  columnType: TableColumn["type"] = "text"
-): MarkdownTableRow[] {
-  return [...rows].sort((a, b) =>
-    compareRowsByColumn(a, b, columnIndex, direction, columnType)
-  );
 }
 
 export function sortRowsByRules(

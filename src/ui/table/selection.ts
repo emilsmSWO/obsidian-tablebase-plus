@@ -1,11 +1,11 @@
 import { SerializedSelection } from "../../types";
 
-export interface FocusedCell {
+interface FocusedCell {
   row: number;
   col: number;
 }
 
-export type SelectionState =
+type SelectionState =
   | { kind: "none" }
   | { kind: "cell"; row: number; col: number }
   | { kind: "row"; row: number }

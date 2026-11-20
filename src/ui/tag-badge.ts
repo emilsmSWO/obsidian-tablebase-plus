@@ -1,7 +1,7 @@
 import { getColorScheme } from "../core/color-palette";
 import { MultiSelectTag } from "../types";
 
-export interface TagBadgeOptions {
+interface TagBadgeOptions {
   tag: MultiSelectTag;
   removable?: boolean;
   clickable?: boolean;

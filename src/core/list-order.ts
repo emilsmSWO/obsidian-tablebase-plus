@@ -1,5 +1,5 @@
 /** Saved option order of select and multi-select columns: table id -> column name -> option names. */
-export type ListOrders = Record<string, Record<string, string[]>>;
+type ListOrders = Record<string, Record<string, string[]>>;
 
 /**
  * Saved order first, then new options in the order the table has them. Saved options the table

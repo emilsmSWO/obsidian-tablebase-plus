@@ -1,6 +1,6 @@
 export const DEFAULT_DATETIME_FORMAT = "YYYY-MM-DD HH:mm";
 
-export interface DatetimeFormatDescriptor {
+interface DatetimeFormatDescriptor {
   format: string;
   label: string;
 }
@@ -23,11 +23,11 @@ export const DATETIME_FORMAT_OPTIONS: DatetimeFormatDescriptor[] = [
 const TOKEN = /YYYY|MM|DD|HH|hh|mm|ss/g;
 
 /** Tells a datetime format apart from other header parameters such as "sum" or "w=300". */
-export function isDatetimeFormat(param: string): boolean {
+function isDatetimeFormat(param: string): boolean {
   return /YYYY|MM|DD|HH|hh|mm|ss/.test(param) && !/[\]|]/.test(param);
 }
 
-export const AUTOUPDATE_PARAM = "autoupdate";
+const AUTOUPDATE_PARAM = "autoupdate";
 
 /** Reads the format and the "autoupdate" flag out of "[datetime:FORMAT,autoupdate,...]". */
 export function parseDatetimeParams(params: string | undefined): {

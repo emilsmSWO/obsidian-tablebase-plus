@@ -7,7 +7,7 @@ export interface LinkHoverParent {
   hoverPopover: unknown;
 }
 
-export function openExternalLink(url: string): void {
+function openExternalLink(url: string): void {
   if (typeof window !== "undefined" && url) {
     window.open(url, "_blank", "noopener,noreferrer");
   }

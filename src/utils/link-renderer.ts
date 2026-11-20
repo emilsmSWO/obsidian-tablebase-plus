@@ -1,4 +1,4 @@
-export interface LinkToken {
+interface LinkToken {
   type: "text" | "code" | "external" | "internal";
   text: string;
   href?: string;

@@ -3,7 +3,7 @@ import { ColumnType, DateFormatOption } from "../../types";
 import { appendIcon } from "../../utils/dom";
 import { COLUMN_TYPE_DEFINITIONS, ICON_CHECK } from "../icons";
 
-export interface AddColumnModalOptions {
+interface AddColumnModalOptions {
   app: App;
   onSave: (name: string, type: ColumnType, dateFormat?: DateFormatOption) => void;
   onClose?: () => void;

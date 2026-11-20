@@ -7,7 +7,7 @@ export interface SettingsStorage {
   saveData(data: Record<string, unknown>): Promise<void>;
 }
 
-export type SettingsChangeListener = (settings: PluginSettings) => void;
+type SettingsChangeListener = (settings: PluginSettings) => void;
 
 export class SettingsService {
   private settings: PluginSettings = { ...DEFAULT_SETTINGS };

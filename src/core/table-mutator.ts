@@ -114,7 +114,7 @@ export const TYPE_ANNOTATION_REGEX =
 export const SINGLE_SELECT_KEYWORDS =
   /^(status|priority|state|stage)$/i;
 
-export const MULTI_SELECT_KEYWORDS =
+const MULTI_SELECT_KEYWORDS =
   /^(tags?|labels?|categories|category|keywords?)$/i;
 
 export const DATE_KEYWORDS =

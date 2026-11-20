@@ -1,6 +1,6 @@
 import { ColumnAlignment, MarkdownTableData, MarkdownTableRow } from "../types";
 
-export function escapeTableCell(content: string): string {
+function escapeTableCell(content: string): string {
   if (!content || !content.includes("|")) return content || "";
 
   let result = "";

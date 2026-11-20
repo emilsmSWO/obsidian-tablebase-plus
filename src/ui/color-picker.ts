@@ -1,7 +1,7 @@
 import { COLOR_LIST, getColorScheme } from "../core/color-palette";
 import { TagColor } from "../types";
 
-export interface ColorPickerOptions {
+interface ColorPickerOptions {
   currentColor: TagColor;
   onSelectColor: (color: TagColor) => void | Promise<void>;
   allowCustomHex?: boolean;

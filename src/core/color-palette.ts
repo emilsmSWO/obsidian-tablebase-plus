@@ -1,6 +1,6 @@
 import { TagColor, PresetTagColor } from "../types";
 
-export interface ColorScheme {
+interface ColorScheme {
   bg: string;
   text: string;
   border?: string;
@@ -84,7 +84,7 @@ export const COLOR_LIST: PresetTagColor[] = [
   "red",
 ];
 
-export function getCustomColorScheme(hex: string): ColorScheme {
+function getCustomColorScheme(hex: string): ColorScheme {
   const cleanHex = hex.replace("#", "");
   const r = parseInt(cleanHex.substring(0, 2), 16) || 0;
   const g = parseInt(cleanHex.substring(2, 4), 16) || 0;

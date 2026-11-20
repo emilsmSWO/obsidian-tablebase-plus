@@ -1,6 +1,6 @@
 import { DisposableRegistry } from "../utils/lifecycle";
 
-export interface MountPopoverOptions {
+interface MountPopoverOptions {
   anchorEl: HTMLElement;
   popoverEl: HTMLElement;
   className?: string;

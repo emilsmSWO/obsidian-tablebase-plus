@@ -37,7 +37,7 @@ import { mountFloatingPopover } from "./popover";
 import { createTagBadge } from "./tag-badge";
 import { BoardViewActions } from "./table/types";
 
-export interface KanbanViewOptions {
+interface KanbanViewOptions {
   app: App;
   sourcePath: string;
   tableData: MarkdownTableData;

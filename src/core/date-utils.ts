@@ -1,6 +1,6 @@
 import { DateFormatOption } from "../types";
 
-export interface DateFormatDescriptor {
+interface DateFormatDescriptor {
   format: DateFormatOption;
   label: string;
   example: string;

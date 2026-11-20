@@ -156,6 +156,26 @@ describe("TableViewController", () => {
     expect(replacement?.scrollLeft).toBe(18);
   });
 
+  it("should stop watching the editor when a commit changes nothing or fails to save", async () => {
+    const disconnect = vi.spyOn(MutationObserver.prototype, "disconnect");
+    const tableData = parseMarkdownTables(
+      "| Task | Status |\n| --- | --- |\n| Buy milk | Todo |"
+    )[0];
+    const view = controller.createInlineTableView({
+      sourcePath: "inline.md",
+      tableData,
+      startLine: 0,
+      tableIndex: 0,
+    });
+
+    await view.actions.onDuplicateRow(9);
+    expect(disconnect).toHaveBeenCalledTimes(1);
+
+    vi.spyOn(syncService, "syncInlineTable").mockRejectedValueOnce(new Error("disk"));
+    await expect(view.actions.onCellUpdate(0, 0, "Updated")).rejects.toThrow("disk");
+    expect(disconnect).toHaveBeenCalledTimes(2);
+  });
+
   it("should retain an empty Board group after its last card moves away", async () => {
     const tableData = parseMarkdownTables(
       "| Task | Status |\n| --- | --- |\n| Buy milk | Todo |\n| Read book | Done |"
